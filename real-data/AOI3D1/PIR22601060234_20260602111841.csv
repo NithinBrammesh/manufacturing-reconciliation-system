@@ -1,0 +1,20 @@
+Barcode,PIR22601060234
+Result,PASS
+Panel ID,"3"
+Program Name,\PIR_DUAL_SENSOR_TOP\PIR_DUAL_SENSOR_TOP.KYJOB
+Machine ID,Line_1_Post_AOI
+Inspection Operator ID,RAJNISH
+Review Operator ID,
+Test Start Time,20260602111745
+Test End Time,20260602111753
+Number of Tested Component,156
+Number of False Call Component,1
+Number of Defect Component,0
+Number of Tested Inspection Item,1596
+Number of False Call Inspection Item,0
+Number of Defect Inspection Item,5Panel Barcode,Ref Des(CRD name),Lead,Comp Part #,Package Name,Machine Call,Repair Status,Operator Call
+PIR22601060234,U2,9,IKRECICXXSM00004,IKRECICXXSM00004,Solderfillet,FALSE,GOOD
+PIR22601060234,U2,7,IKRECICXXSM00004,IKRECICXXSM00004,Solderfillet,FALSE,GOOD
+PIR22601060234,U2,6,IKRECICXXSM00004,IKRECICXXSM00004,Solderfillet,FALSE,GOOD
+PIR22601060234,U2,5,IKRECICXXSM00004,IKRECICXXSM00004,Solderfillet,FALSE,GOOD
+PIR22601060234,U2,3,IKRECICXXSM00004,IKRECICXXSM00004,Solderfillet,FALSE,GOOD

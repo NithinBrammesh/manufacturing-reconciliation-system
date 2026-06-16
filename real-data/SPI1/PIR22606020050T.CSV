@@ -1,0 +1,11 @@
+Board
+MasterBarcode,InspectionDateTime,PCBResult,Side,InspectionStartTime
+PIR22606020050T,2026-06-02 11:53:52,GOOD,Top,11:53:43
+Panel
+PanelInspectionStartTime,PanelInspectionDate,PanelResult
+11:53:43,2026-06-02,GOOD
+11:53:43,2026-06-02,GOOD
+11:53:43,2026-06-02,GOOD
+11:53:43,2026-06-02,GOOD
+11:53:43,2026-06-02,GOOD
+11:53:43,2026-06-02,GOOD

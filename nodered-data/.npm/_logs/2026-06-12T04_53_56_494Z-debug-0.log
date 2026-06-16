@@ -1,0 +1,120 @@
+0 verbose cli /usr/local/bin/node /usr/src/node-red/node_modules/npm/bin/npm-cli.js
+1 info using npm@10.9.8
+2 info using node@v20.20.2
+3 silly config load:file:/usr/src/node-red/node_modules/npm/npmrc
+4 silly config load:file:/data/.npmrc
+5 silly config load:file:/usr/src/node-red/.npmrc
+6 silly config load:file:/usr/local/etc/npmrc
+7 verbose title npm install node-red-contrib-redis@1.4.0
+8 verbose argv "install" "--no-audit" "--no-update-notifier" "--no-fund" "--save" "--save-prefix" "~" "--omit" "dev" "--engine-strict" "--" "node-red-contrib-redis@1.4.0"
+9 verbose logfile logs-max:10 dir:/data/.npm/_logs/2026-06-12T04_53_56_494Z-
+10 verbose logfile /data/.npm/_logs/2026-06-12T04_53_56_494Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:2197815296 maxSize:549453824 maxEntrySize:274726912
+13 silly idealTree buildDeps
+14 silly fetch manifest node-red-contrib-redis@1.4.0
+15 silly packumentCache full:https://registry.npmjs.org/node-red-contrib-redis cache-miss
+16 http fetch GET 200 https://registry.npmjs.org/node-red-contrib-redis 783ms (cache miss)
+17 silly packumentCache full:https://registry.npmjs.org/node-red-contrib-redis set size:undefined disposed:false
+18 silly placeDep ROOT node-red-contrib-redis@1.4.0 OK for: node-red-project@0.0.1 want: 1.4.0
+19 silly fetch manifest async@^3.2.0
+20 silly packumentCache full:https://registry.npmjs.org/async cache-miss
+21 silly fetch manifest ioredis@^5.4.1
+22 silly packumentCache full:https://registry.npmjs.org/ioredis cache-miss
+23 http fetch GET 200 https://registry.npmjs.org/async 85ms (cache miss)
+24 silly packumentCache full:https://registry.npmjs.org/async set size:undefined disposed:false
+25 http fetch GET 200 https://registry.npmjs.org/ioredis 558ms (cache miss)
+26 silly packumentCache full:https://registry.npmjs.org/ioredis set size:undefined disposed:false
+27 silly placeDep ROOT async@3.2.6 OK for: node-red-contrib-redis@1.4.0 want: ^3.2.0
+28 silly placeDep ROOT ioredis@5.11.1 OK for: node-red-contrib-redis@1.4.0 want: ^5.4.1
+29 silly fetch manifest @ioredis/commands@1.10.0
+30 silly packumentCache full:https://registry.npmjs.org/@ioredis%2fcommands cache-miss
+31 silly fetch manifest cluster-key-slot@1.1.1
+32 silly packumentCache full:https://registry.npmjs.org/cluster-key-slot cache-miss
+33 silly fetch manifest debug@4.4.3
+34 silly packumentCache full:https://registry.npmjs.org/debug cache-miss
+35 silly fetch manifest denque@2.1.0
+36 silly packumentCache full:https://registry.npmjs.org/denque cache-miss
+37 silly fetch manifest redis-errors@1.2.0
+38 silly packumentCache full:https://registry.npmjs.org/redis-errors cache-miss
+39 silly fetch manifest redis-parser@3.0.0
+40 silly packumentCache full:https://registry.npmjs.org/redis-parser cache-miss
+41 silly fetch manifest standard-as-callback@2.1.0
+42 silly packumentCache full:https://registry.npmjs.org/standard-as-callback cache-miss
+43 http fetch GET 200 https://registry.npmjs.org/cluster-key-slot 72ms (cache miss)
+44 silly packumentCache full:https://registry.npmjs.org/cluster-key-slot set size:undefined disposed:false
+45 http fetch GET 200 https://registry.npmjs.org/denque 195ms (cache miss)
+46 silly packumentCache full:https://registry.npmjs.org/denque set size:undefined disposed:false
+47 http fetch GET 200 https://registry.npmjs.org/redis-parser 213ms (cache miss)
+48 silly packumentCache full:https://registry.npmjs.org/redis-parser set size:undefined disposed:false
+49 http fetch GET 200 https://registry.npmjs.org/debug 220ms (cache miss)
+50 silly packumentCache full:https://registry.npmjs.org/debug set size:undefined disposed:false
+51 http fetch GET 200 https://registry.npmjs.org/@ioredis%2fcommands 356ms (cache miss)
+52 silly packumentCache full:https://registry.npmjs.org/@ioredis%2fcommands set size:undefined disposed:false
+53 http fetch GET 200 https://registry.npmjs.org/redis-errors 467ms (cache miss)
+54 silly packumentCache full:https://registry.npmjs.org/redis-errors set size:undefined disposed:false
+55 http fetch GET 200 https://registry.npmjs.org/standard-as-callback 468ms (cache miss)
+56 silly packumentCache full:https://registry.npmjs.org/standard-as-callback set size:undefined disposed:false
+57 silly placeDep ROOT @ioredis/commands@1.10.0 OK for: ioredis@5.11.1 want: 1.10.0
+58 silly placeDep ROOT cluster-key-slot@1.1.1 OK for: ioredis@5.11.1 want: 1.1.1
+59 silly placeDep ROOT debug@4.4.3 OK for: ioredis@5.11.1 want: 4.4.3
+60 silly placeDep ROOT denque@2.1.0 OK for: ioredis@5.11.1 want: 2.1.0
+61 silly placeDep ROOT redis-errors@1.2.0 OK for: ioredis@5.11.1 want: 1.2.0
+62 silly placeDep ROOT redis-parser@3.0.0 OK for: ioredis@5.11.1 want: 3.0.0
+63 silly placeDep ROOT standard-as-callback@2.1.0 OK for: ioredis@5.11.1 want: 2.1.0
+64 silly fetch manifest ms@^2.1.3
+65 silly packumentCache full:https://registry.npmjs.org/ms cache-miss
+66 http fetch GET 200 https://registry.npmjs.org/ms 66ms (cache miss)
+67 silly packumentCache full:https://registry.npmjs.org/ms set size:undefined disposed:false
+68 silly placeDep ROOT ms@2.1.3 OK for: debug@4.4.3 want: ^2.1.3
+69 silly reify moves {}
+70 http cache redis-parser@https://registry.npmjs.org/redis-parser/-/redis-parser-3.0.0.tgz 1ms (cache hit)
+71 http cache denque@https://registry.npmjs.org/denque/-/denque-2.1.0.tgz 0ms (cache hit)
+72 http cache ms@https://registry.npmjs.org/ms/-/ms-2.1.3.tgz 0ms (cache hit)
+73 http cache redis-errors@https://registry.npmjs.org/redis-errors/-/redis-errors-1.2.0.tgz 0ms (cache hit)
+74 http cache debug@https://registry.npmjs.org/debug/-/debug-4.4.3.tgz 0ms (cache hit)
+75 http cache cluster-key-slot@https://registry.npmjs.org/cluster-key-slot/-/cluster-key-slot-1.1.1.tgz 0ms (cache hit)
+76 http cache ioredis@https://registry.npmjs.org/ioredis/-/ioredis-5.11.1.tgz 0ms (cache hit)
+77 http cache standard-as-callback@https://registry.npmjs.org/standard-as-callback/-/standard-as-callback-2.1.0.tgz 0ms (cache hit)
+78 http cache @ioredis/commands@https://registry.npmjs.org/@ioredis/commands/-/commands-1.10.0.tgz 1ms (cache hit)
+79 http cache node-red-contrib-redis@https://registry.npmjs.org/node-red-contrib-redis/-/node-red-contrib-redis-1.4.0.tgz 0ms (cache hit)
+80 http cache async@https://registry.npmjs.org/async/-/async-3.2.6.tgz 0ms (cache hit)
+81 silly tarball no local data for redis-parser@https://registry.npmjs.org/redis-parser/-/redis-parser-3.0.0.tgz. Extracting by manifest.
+82 silly tarball no local data for denque@https://registry.npmjs.org/denque/-/denque-2.1.0.tgz. Extracting by manifest.
+83 silly tarball no local data for ms@https://registry.npmjs.org/ms/-/ms-2.1.3.tgz. Extracting by manifest.
+84 silly tarball no local data for redis-errors@https://registry.npmjs.org/redis-errors/-/redis-errors-1.2.0.tgz. Extracting by manifest.
+85 silly tarball no local data for debug@https://registry.npmjs.org/debug/-/debug-4.4.3.tgz. Extracting by manifest.
+86 silly tarball no local data for cluster-key-slot@https://registry.npmjs.org/cluster-key-slot/-/cluster-key-slot-1.1.1.tgz. Extracting by manifest.
+87 silly tarball no local data for ioredis@https://registry.npmjs.org/ioredis/-/ioredis-5.11.1.tgz. Extracting by manifest.
+88 silly tarball no local data for standard-as-callback@https://registry.npmjs.org/standard-as-callback/-/standard-as-callback-2.1.0.tgz. Extracting by manifest.
+89 silly tarball no local data for @ioredis/commands@https://registry.npmjs.org/@ioredis/commands/-/commands-1.10.0.tgz. Extracting by manifest.
+90 silly tarball no local data for node-red-contrib-redis@https://registry.npmjs.org/node-red-contrib-redis/-/node-red-contrib-redis-1.4.0.tgz. Extracting by manifest.
+91 silly tarball no local data for async@https://registry.npmjs.org/async/-/async-3.2.6.tgz. Extracting by manifest.
+92 http fetch GET 200 https://registry.npmjs.org/redis-errors/-/redis-errors-1.2.0.tgz 173ms (cache miss)
+93 http fetch GET 200 https://registry.npmjs.org/ms/-/ms-2.1.3.tgz 178ms (cache miss)
+94 http fetch GET 200 https://registry.npmjs.org/denque/-/denque-2.1.0.tgz 183ms (cache miss)
+95 http fetch GET 200 https://registry.npmjs.org/redis-parser/-/redis-parser-3.0.0.tgz 187ms (cache miss)
+96 http fetch GET 200 https://registry.npmjs.org/cluster-key-slot/-/cluster-key-slot-1.1.1.tgz 180ms (cache miss)
+97 http fetch GET 200 https://registry.npmjs.org/debug/-/debug-4.4.3.tgz 196ms (cache miss)
+98 http fetch GET 200 https://registry.npmjs.org/ioredis/-/ioredis-5.11.1.tgz 292ms (cache miss)
+99 http fetch GET 200 https://registry.npmjs.org/standard-as-callback/-/standard-as-callback-2.1.0.tgz 2392ms (cache miss)
+100 http fetch GET 200 https://registry.npmjs.org/async/-/async-3.2.6.tgz 2506ms (cache miss)
+101 http fetch GET 200 https://registry.npmjs.org/@ioredis/commands/-/commands-1.10.0.tgz 2733ms (cache miss)
+102 http fetch GET 200 https://registry.npmjs.org/node-red-contrib-redis/-/node-red-contrib-redis-1.4.0.tgz 2734ms (cache miss)
+103 silly ADD node_modules/ms
+104 silly ADD node_modules/standard-as-callback
+105 silly ADD node_modules/redis-parser
+106 silly ADD node_modules/redis-errors
+107 silly ADD node_modules/denque
+108 silly ADD node_modules/debug
+109 silly ADD node_modules/cluster-key-slot
+110 silly ADD node_modules/@ioredis/commands
+111 silly ADD node_modules/ioredis
+112 silly ADD node_modules/async
+113 silly ADD node_modules/node-red-contrib-redis
+114 verbose cwd /data
+115 verbose os Linux 6.17.0-35-generic
+116 verbose node v20.20.2
+117 verbose npm  v10.9.8
+118 verbose exit 0
+119 info ok

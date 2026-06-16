@@ -1,0 +1,1274 @@
+[
+    {
+        "id": "9d4db24319f4b0b7",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "ffae8fba2de6c069",
+        "type": "kafkajs-client",
+        "name": "",
+        "brokers": "kafka:9092",
+        "clientid": "kafkajs-client",
+        "connectiontimeout": 3000,
+        "requesttimeout": 25000,
+        "advancedretry": false,
+        "maxretrytime": 30000,
+        "initialretrytime": 300,
+        "factor": 0.2,
+        "multiplier": 2,
+        "retries": 5,
+        "auth": "none",
+        "tlsselfsign": false,
+        "tlscacert": "",
+        "tlsclientcert": "",
+        "tlsprivatekey": "",
+        "tlspassphrase": "",
+        "saslssl": true,
+        "saslmechanism": "plain",
+        "loglevel": "debug"
+    },
+    {
+        "id": "fefb39603165678d",
+        "type": "redis-config",
+        "name": "Local",
+        "options": "{   \"host\": \"redis\",   \"port\": 6379 }",
+        "cluster": false,
+        "optionsType": "json"
+    },
+    {
+        "id": "e9b0333bc3dc422f",
+        "type": "kafkajs-producer",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "client": "ffae8fba2de6c069",
+        "topic": "aoi-topic",
+        "advancedoptions": false,
+        "acknowledge": "all",
+        "partition": "",
+        "headeritems": {},
+        "key": "",
+        "responsetimeout": 30000,
+        "transactiontimeout": 60000,
+        "metadatamaxage": 300000,
+        "allowautotopiccreation": false,
+        "x": 920,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "87629019c16e2627",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "function 1",
+        "func": "var lines = msg.payload.split('\\n');\nvar data = {};\n\nlines.forEach(function (line) {\n    line = line.trim();\n    if (line) {\n        var idx = line.indexOf(',');\n        if (idx !== -1) {\n            var key = line.substring(0, idx).trim();\n            var value = line.substring(idx + 1).trim().replace(/\"/g, '');\n            data[key] = value;\n        }\n    }\n});\n\nmsg.payload = JSON.stringify({\n    barcode: data[\"Barcode\"],\n    result: data[\"Result\"],\n    panelId: data[\"Panel ID\"],\n    programName: data[\"Program Name\"],\n    source: \"AOI\"\n});\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 740,
+        "y": 360,
+        "wires": [
+            [
+                "e9b0333bc3dc422f",
+                "b6959c9e8b2949bb"
+            ]
+        ]
+    },
+    {
+        "id": "fd0977e3c2980d6a",
+        "type": "file in",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "filename": "payload",
+        "filenameType": "msg",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": false,
+        "x": 580,
+        "y": 320,
+        "wires": [
+            [
+                "7ce2fb72cd9c3cb7",
+                "87629019c16e2627"
+            ]
+        ]
+    },
+    {
+        "id": "b6959c9e8b2949bb",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 940,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "7ce2fb72cd9c3cb7",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 4",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 760,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "f4ee8dd3c9f36ad8",
+        "type": "watch",
+        "z": "9d4db24319f4b0b7",
+        "name": "AOI3D1-watch",
+        "files": "/real-data/AOI3D1",
+        "recursive": "",
+        "x": 120,
+        "y": 180,
+        "wires": [
+            [
+                "fa0669195a15cf63",
+                "cd3989a64917a8a6"
+            ]
+        ]
+    },
+    {
+        "id": "fa0669195a15cf63",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 9",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 280,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "e98f57e4de07683a",
+        "type": "exec",
+        "z": "9d4db24319f4b0b7",
+        "command": "find /real-data/AOI3D1 -name \"*.csv\"",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "aoi exec",
+        "x": 300,
+        "y": 580,
+        "wires": [
+            [
+                "da61c54eec3db387"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "331e95bd30eb28c9",
+        "type": "exec",
+        "z": "9d4db24319f4b0b7",
+        "command": "find /real-data/SPI1 -name \"*.CSV\"",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "spi exec",
+        "x": 340,
+        "y": 1580,
+        "wires": [
+            [
+                "b9c498cf8a0a4f88"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "cd3989a64917a8a6",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "AOI Extract ",
+        "func": "msg.filename = msg.payload;\n\nlet parts = msg.payload.split(\"/\");\nmsg.fileOnly = parts[parts.length - 1];\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 180,
+        "wires": [
+            [
+                "ac1e0ff5ac2a0d0e",
+                "1ac39f410281d3f2"
+            ]
+        ]
+    },
+    {
+        "id": "ac1e0ff5ac2a0d0e",
+        "type": "redis-command",
+        "z": "9d4db24319f4b0b7",
+        "server": "fefb39603165678d",
+        "command": "SISMEMBER",
+        "name": "Check P File",
+        "topic": "processed_files",
+        "params": "[msg.fileOnly]",
+        "paramsType": "json",
+        "payloadType": "json",
+        "block": false,
+        "x": 490,
+        "y": 180,
+        "wires": [
+            [
+                "e6dd947c5b3ac909",
+                "d0b2cebcb3bedf2f"
+            ]
+        ]
+    },
+    {
+        "id": "e6dd947c5b3ac909",
+        "type": "switch",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 690,
+        "y": 180,
+        "wires": [
+            [
+                "03dbc109555329ea",
+                "c454f6742625aa1e"
+            ],
+            [
+                "87653119f7ee064b"
+            ]
+        ]
+    },
+    {
+        "id": "d0b2cebcb3bedf2f",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 660,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "87653119f7ee064b",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 880,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "1ac39f410281d3f2",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 7",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 480,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "4d9597cbbf794d2b",
+        "type": "inject",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 140,
+        "y": 560,
+        "wires": [
+            [
+                "e98f57e4de07683a"
+            ]
+        ]
+    },
+    {
+        "id": "da61c54eec3db387",
+        "type": "split",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "property": "payload",
+        "x": 450,
+        "y": 600,
+        "wires": [
+            [
+                "2ed6bd62d4687c54"
+            ]
+        ]
+    },
+    {
+        "id": "2ed6bd62d4687c54",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "AOI Extract ",
+        "func": "msg.filename = msg.payload;\n\nlet parts = msg.payload.split(\"/\");\nmsg.fileOnly = parts[parts.length - 1];\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 610,
+        "y": 600,
+        "wires": [
+            [
+                "924b93669a0ec539",
+                "26aaa6414719dd25"
+            ]
+        ]
+    },
+    {
+        "id": "65b43cca86db1750",
+        "type": "kafkajs-producer",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "client": "ffae8fba2de6c069",
+        "topic": "aoi-topic",
+        "advancedoptions": false,
+        "acknowledge": "all",
+        "partition": "",
+        "headeritems": {},
+        "key": "",
+        "responsetimeout": 30000,
+        "transactiontimeout": 60000,
+        "metadatamaxage": 300000,
+        "allowautotopiccreation": false,
+        "x": 1000,
+        "y": 860,
+        "wires": []
+    },
+    {
+        "id": "891022bb8a29095c",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "function 3",
+        "func": "var savedFileOnly = msg.fileOnly;\nvar savedFilename = msg.filename;\nvar lines = msg.payload.split('\\n');\nvar data = {};\n\nlines.forEach(function (line) {\n    line = line.trim();\n    if (line) {\n        var idx = line.indexOf(',');\n        if (idx !== -1) {\n            var key = line.substring(0, idx).trim();\n            var value = line.substring(idx + 1).trim().replace(/\"/g, '');\n            data[key] = value;\n        }\n    }\n});\n\nvar jsonPayload = JSON.stringify({\n    barcode: data[\"Barcode\"],\n    result: data[\"Result\"],\n    panelId: data[\"Panel ID\"],\n    programName: data[\"Program Name\"],\n    source: \"AOI\"\n});\n\n// msg1 goes to kafkajs-producer (needs JSON payload)\nvar msg1 = { payload: jsonPayload };\n\n// msg2 goes to mark processed (needs fileOnly)\nvar msg2 = {\n    payload: savedFileOnly,\n    fileOnly: savedFileOnly,\n    filename: savedFilename\n};\n\nreturn [msg1, msg2];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 780,
+        "y": 860,
+        "wires": [
+            [
+                "47d8a8edc33baf9b",
+                "65b43cca86db1750"
+            ],
+            [
+                "d74a61c547634b7c"
+            ]
+        ]
+    },
+    {
+        "id": "ac815b54deb07080",
+        "type": "file in",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "filename": "payload",
+        "filenameType": "msg",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": false,
+        "x": 620,
+        "y": 820,
+        "wires": [
+            [
+                "891022bb8a29095c"
+            ]
+        ]
+    },
+    {
+        "id": "924b93669a0ec539",
+        "type": "redis-command",
+        "z": "9d4db24319f4b0b7",
+        "server": "fefb39603165678d",
+        "command": "SISMEMBER",
+        "name": "Check P File",
+        "topic": "processed_files",
+        "params": "[msg.fileOnly]",
+        "paramsType": "json",
+        "payloadType": "json",
+        "block": false,
+        "x": 150,
+        "y": 720,
+        "wires": [
+            [
+                "e5f6bc0fbfa562b7"
+            ]
+        ]
+    },
+    {
+        "id": "e5f6bc0fbfa562b7",
+        "type": "switch",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 290,
+        "y": 760,
+        "wires": [
+            [
+                "c8b652d4ffb6a599",
+                "72eda34bc84504d9"
+            ],
+            [
+                "07541d3916b19a96"
+            ]
+        ]
+    },
+    {
+        "id": "07541d3916b19a96",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 8",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 380,
+        "y": 860,
+        "wires": []
+    },
+    {
+        "id": "d74a61c547634b7c",
+        "type": "redis-command",
+        "z": "9d4db24319f4b0b7",
+        "server": "fefb39603165678d",
+        "command": "SADD",
+        "name": "mark processed",
+        "topic": "processed_files",
+        "params": "[\"msg.fileOnly\"]",
+        "paramsType": "json",
+        "payloadType": "json",
+        "block": false,
+        "x": 1000,
+        "y": 940,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "26aaa6414719dd25",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 11",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 820,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "47d8a8edc33baf9b",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 12",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 920,
+        "y": 780,
+        "wires": []
+    },
+    {
+        "id": "c8b652d4ffb6a599",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "function 4",
+        "func": "msg.payload = msg.filename;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 780,
+        "wires": [
+            [
+                "85f05a97446e57a8",
+                "ac815b54deb07080"
+            ]
+        ]
+    },
+    {
+        "id": "85f05a97446e57a8",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 13",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 660,
+        "y": 740,
+        "wires": []
+    },
+    {
+        "id": "72eda34bc84504d9",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 14",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 440,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "03dbc109555329ea",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "function 5",
+        "func": "msg.payload = msg.filename;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 420,
+        "y": 300,
+        "wires": [
+            [
+                "fd0977e3c2980d6a"
+            ]
+        ]
+    },
+    {
+        "id": "c454f6742625aa1e",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 15",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 880,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "dd59532407ab193e",
+        "type": "watch",
+        "z": "9d4db24319f4b0b7",
+        "name": "SPI1-watch",
+        "files": "/real-data/AOI3D1",
+        "recursive": "",
+        "x": 110,
+        "y": 1180,
+        "wires": [
+            [
+                "7bd10b7c187f98ce",
+                "1efc5aca41b28ff4"
+            ]
+        ]
+    },
+    {
+        "id": "f0fadc91031fc189",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "function 6",
+        "func": "var lines = msg.payload.split('\\n');\nvar boardData = null;\nvar headers = null;\n\nfor (var i = 0; i < lines.length; i++) {\n    var line = lines[i].trim();\n    if (line === 'Board') {\n        // Next line is headers, line after is data\n        headers = lines[i + 1].trim().split(',');\n        var values = lines[i + 2] ? lines[i + 2].trim().split(',') : [];\n        if (values.length > 0) {\n            boardData = {};\n            headers.forEach(function (h, idx) {\n                boardData[h.trim()] = values[idx] ? values[idx].trim() : '';\n            });\n        }\n        break;\n    }\n}\n\nif (!boardData) {\n    return null; // skip if no board data\n}\n\nmsg.payload = JSON.stringify({\n    barcode: boardData[\"MasterBarcode\"],\n    inspectionDateTime: boardData[\"InspectionDateTime\"],\n    result: boardData[\"PCBResult\"],\n    side: boardData[\"Side\"],\n    source: \"SPI\"\n});\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 740,
+        "y": 1360,
+        "wires": [
+            [
+                "b9ccdf26accbd018",
+                "de0e797dcab71335"
+            ]
+        ]
+    },
+    {
+        "id": "3c018fa9ca5dfc57",
+        "type": "file in",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "filename": "payload",
+        "filenameType": "msg",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": false,
+        "x": 580,
+        "y": 1320,
+        "wires": [
+            [
+                "f49f9efefe4f9537",
+                "f0fadc91031fc189"
+            ]
+        ]
+    },
+    {
+        "id": "b9ccdf26accbd018",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 16",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 940,
+        "y": 1320,
+        "wires": []
+    },
+    {
+        "id": "f49f9efefe4f9537",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 17",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 760,
+        "y": 1280,
+        "wires": []
+    },
+    {
+        "id": "7bd10b7c187f98ce",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 18",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 280,
+        "y": 1120,
+        "wires": []
+    },
+    {
+        "id": "1efc5aca41b28ff4",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "SPI1 Extract ",
+        "func": "msg.filename = msg.payload;\n\nlet parts = msg.payload.split(\"/\");\nmsg.fileOnly = parts[parts.length - 1];\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 1180,
+        "wires": [
+            [
+                "b09702dfd5ed38b0",
+                "8696ddac2dbce3e6"
+            ]
+        ]
+    },
+    {
+        "id": "b09702dfd5ed38b0",
+        "type": "redis-command",
+        "z": "9d4db24319f4b0b7",
+        "server": "fefb39603165678d",
+        "command": "SISMEMBER",
+        "name": "Check P File",
+        "topic": "processed_files_spi",
+        "params": "[msg.fileOnly]",
+        "paramsType": "json",
+        "payloadType": "json",
+        "block": false,
+        "x": 490,
+        "y": 1180,
+        "wires": [
+            [
+                "18f52d3a3b1472dc",
+                "ed8966dedff791d1"
+            ]
+        ]
+    },
+    {
+        "id": "18f52d3a3b1472dc",
+        "type": "switch",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 690,
+        "y": 1180,
+        "wires": [
+            [
+                "502934938e9e09c5",
+                "a976321993273571"
+            ],
+            [
+                "11a6e412d9e4f4cd"
+            ]
+        ]
+    },
+    {
+        "id": "ed8966dedff791d1",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 19",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 660,
+        "y": 1120,
+        "wires": []
+    },
+    {
+        "id": "11a6e412d9e4f4cd",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 20",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 880,
+        "y": 1200,
+        "wires": []
+    },
+    {
+        "id": "8696ddac2dbce3e6",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 21",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 480,
+        "y": 1120,
+        "wires": []
+    },
+    {
+        "id": "502934938e9e09c5",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "function 7",
+        "func": "msg.payload = msg.filename;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 420,
+        "y": 1300,
+        "wires": [
+            [
+                "3c018fa9ca5dfc57"
+            ]
+        ]
+    },
+    {
+        "id": "a976321993273571",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 22",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 880,
+        "y": 1120,
+        "wires": []
+    },
+    {
+        "id": "de0e797dcab71335",
+        "type": "kafkajs-producer",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "client": "ffae8fba2de6c069",
+        "topic": "spi-topic",
+        "advancedoptions": false,
+        "acknowledge": "all",
+        "partition": "",
+        "headeritems": {},
+        "key": "",
+        "responsetimeout": 30000,
+        "transactiontimeout": 60000,
+        "metadatamaxage": 300000,
+        "allowautotopiccreation": false,
+        "x": 940,
+        "y": 1400,
+        "wires": []
+    },
+    {
+        "id": "d5269f12eae7db26",
+        "type": "inject",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 180,
+        "y": 1560,
+        "wires": [
+            [
+                "331e95bd30eb28c9"
+            ]
+        ]
+    },
+    {
+        "id": "b9c498cf8a0a4f88",
+        "type": "split",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "property": "payload",
+        "x": 490,
+        "y": 1600,
+        "wires": [
+            [
+                "bf3a9d40e2b7cc0d"
+            ]
+        ]
+    },
+    {
+        "id": "bf3a9d40e2b7cc0d",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "SPI1 Extract ",
+        "func": "msg.filename = msg.payload;\n\nlet parts = msg.payload.split(\"/\");\nmsg.fileOnly = parts[parts.length - 1];\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 650,
+        "y": 1600,
+        "wires": [
+            [
+                "c022d79544be8c1b",
+                "a562a4c1ab37353d"
+            ]
+        ]
+    },
+    {
+        "id": "3c12b124003fd92d",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "function 2",
+        "func": "var savedFileOnly = msg.fileOnly;\nvar savedFilename = msg.filename;\n\nvar lines = msg.payload.split('\\n');\nvar boardData = null;\nvar headers = null;\n\nfor (var i = 0; i < lines.length; i++) {\n\n    var line = lines[i].trim();\n\n    if (line === 'Board') {\n\n        headers = lines[i + 1].trim().split(',');\n\n        var values = lines[i + 2]\n            ? lines[i + 2].trim().split(',')\n            : [];\n\n        if (values.length > 0) {\n\n            boardData = {};\n\n            headers.forEach(function (h, idx) {\n\n                boardData[h.trim()] =\n                    values[idx]\n                        ? values[idx].trim()\n                        : '';\n\n            });\n\n        }\n\n        break;\n    }\n}\n\nif (!boardData) {\n    return null;\n}\n\nvar jsonPayload = JSON.stringify({\n\n    barcode: boardData[\"MasterBarcode\"],\n\n    inspectionDateTime:\n        boardData[\"InspectionDateTime\"],\n\n    result:\n        boardData[\"PCBResult\"],\n\n    side:\n        boardData[\"Side\"],\n\n    source: \"SPI\"\n\n});\n\n\n// Output 1 -> Kafka\n\nvar msg1 = {\n\n    payload: jsonPayload\n\n};\n\n\n// Output 2 -> Redis Mark Processed\n\nvar msg2 = {\n\n    payload: savedFileOnly,\n\n    fileOnly: savedFileOnly,\n\n    filename: savedFilename\n\n};\n\nreturn [msg1, msg2];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 780,
+        "y": 1860,
+        "wires": [
+            [
+                "78fb1e0ddacbfd49",
+                "e90c33e6ae3da935"
+            ],
+            [
+                "8d0be82ff4fba2d5"
+            ]
+        ]
+    },
+    {
+        "id": "865c87f766d659d1",
+        "type": "file in",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "filename": "payload",
+        "filenameType": "msg",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": false,
+        "x": 620,
+        "y": 1820,
+        "wires": [
+            [
+                "3c12b124003fd92d"
+            ]
+        ]
+    },
+    {
+        "id": "c022d79544be8c1b",
+        "type": "redis-command",
+        "z": "9d4db24319f4b0b7",
+        "server": "fefb39603165678d",
+        "command": "SISMEMBER",
+        "name": "Check P File",
+        "topic": "processed_files_spi",
+        "params": "[msg.fileOnly]",
+        "paramsType": "json",
+        "payloadType": "json",
+        "block": false,
+        "x": 150,
+        "y": 1720,
+        "wires": [
+            [
+                "d9bf48da3d566674"
+            ]
+        ]
+    },
+    {
+        "id": "d9bf48da3d566674",
+        "type": "switch",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 290,
+        "y": 1760,
+        "wires": [
+            [
+                "4d7158453f5327ac",
+                "72a9d9e2857a44af"
+            ],
+            [
+                "5cca3a0d80a46393"
+            ]
+        ]
+    },
+    {
+        "id": "5cca3a0d80a46393",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 5",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 380,
+        "y": 1860,
+        "wires": []
+    },
+    {
+        "id": "8d0be82ff4fba2d5",
+        "type": "redis-command",
+        "z": "9d4db24319f4b0b7",
+        "server": "fefb39603165678d",
+        "command": "SADD",
+        "name": "mark processed",
+        "topic": "processed_files",
+        "params": "[\"msg.fileOnly\"]",
+        "paramsType": "json",
+        "payloadType": "json",
+        "block": false,
+        "x": 1000,
+        "y": 1940,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "a562a4c1ab37353d",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 6",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 860,
+        "y": 1600,
+        "wires": []
+    },
+    {
+        "id": "78fb1e0ddacbfd49",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 7",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 920,
+        "y": 1780,
+        "wires": []
+    },
+    {
+        "id": "4d7158453f5327ac",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "function 3",
+        "func": "msg.payload = msg.filename;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 1780,
+        "wires": [
+            [
+                "26e4ce7ed675f896",
+                "865c87f766d659d1"
+            ]
+        ]
+    },
+    {
+        "id": "26e4ce7ed675f896",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 8",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 660,
+        "y": 1740,
+        "wires": []
+    },
+    {
+        "id": "72a9d9e2857a44af",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 9",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 440,
+        "y": 1700,
+        "wires": []
+    },
+    {
+        "id": "e90c33e6ae3da935",
+        "type": "kafkajs-producer",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "client": "ffae8fba2de6c069",
+        "topic": "spi-topic",
+        "advancedoptions": false,
+        "acknowledge": "all",
+        "partition": "",
+        "headeritems": {},
+        "key": "",
+        "responsetimeout": 30000,
+        "transactiontimeout": 60000,
+        "metadatamaxage": 300000,
+        "allowautotopiccreation": false,
+        "x": 1000,
+        "y": 1860,
+        "wires": []
+    }
+]

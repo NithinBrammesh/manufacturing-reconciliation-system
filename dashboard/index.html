@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Manufacturing Reconciliation Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header>
+        <h1>Manufacturing Reconciliation Dashboard</h1>
+        <p>AOI vs SPI Production Reconciliation</p>
+    </header>
+
+    <!-- ================================= -->
+    <!-- RECONCILIATION SUMMARY -->
+    <!-- ================================= -->
+
+    <section class="section">
+
+        <h2>Reconciliation Summary</h2>
+
+        <div class="container">
+
+            <div class="card summary">
+                <h3>Matched Records</h3>
+                <p id="matched">0</p>
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- ================================= -->
+    <!-- AOI ANALYSIS -->
+    <!-- ================================= -->
+
+    <section class="section">
+
+        <h2>AOI Analysis</h2>
+
+        <div class="container">
+
+            <div class="card">
+                <h3>Total AOI Records</h3>
+                <p id="total_aoi">0</p>
+            </div>
+
+            <div class="card">
+                <h3>Missing In SPI</h3>
+                <p id="missing_in_spi">0</p>
+            </div>
+
+            <div class="card">
+                <h3>AOI Match %</h3>
+                <p id="aoi_match_percentage">0%</p>
+            </div>
+
+            <div class="card">
+                <h3>AOI Loss %</h3>
+                <p id="aoi_loss_percentage">0%</p>
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- ================================= -->
+    <!-- SPI ANALYSIS -->
+    <!-- ================================= -->
+
+    <section class="section">
+
+        <h2>SPI Analysis</h2>
+
+        <div class="container">
+
+            <div class="card">
+                <h3>Total SPI Records</h3>
+                <p id="total_spi">0</p>
+            </div>
+
+            <div class="card">
+                <h3>Missing In AOI</h3>
+                <p id="missing_in_aoi">0</p>
+            </div>
+
+            <div class="card">
+                <h3>SPI Match %</h3>
+                <p id="spi_match_percentage">0%</p>
+            </div>
+
+            <div class="card">
+                <h3>SPI Loss %</h3>
+                <p id="spi_loss_percentage">0%</p>
+            </div>
+
+        </div>
+
+    </section>
+
+    <script src="app.js"></script>
+
+</body>
+
+</html>
