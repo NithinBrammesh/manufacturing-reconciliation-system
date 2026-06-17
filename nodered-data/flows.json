@@ -64,7 +64,7 @@
         "type": "function",
         "z": "9d4db24319f4b0b7",
         "name": "function 1",
-        "func": "var lines = msg.payload.split('\\n');\nvar data = {};\n\nlines.forEach(function (line) {\n    line = line.trim();\n    if (line) {\n        var idx = line.indexOf(',');\n        if (idx !== -1) {\n            var key = line.substring(0, idx).trim();\n            var value = line.substring(idx + 1).trim().replace(/\"/g, '');\n            data[key] = value;\n        }\n    }\n});\n\nmsg.payload = JSON.stringify({\n    barcode: data[\"Barcode\"],\n    result: data[\"Result\"],\n    panelId: data[\"Panel ID\"],\n    programName: data[\"Program Name\"],\n    source: \"AOI\"\n});\n\nreturn msg;",
+        "func": "var lines = msg.payload.split('\\n');\nvar data = {};\n\nlines.forEach(function (line) {\n    line = line.trim();\n    if (line) {\n        var idx = line.indexOf(',');\n        if (idx !== -1) {\n            var key = line.substring(0, idx).trim();\n            var value = line.substring(idx + 1).trim().replace(/\"/g, '');\n            data[key] = value;\n        }\n    }\n});\n\nmsg.payload = JSON.stringify({\n    barcode: data[\"Barcode\"],\n    result: data[\"Result\"],\n    panelId: data[\"Panel ID\"],\n    programName: data[\"Program Name\"],\n\n    machine: \"AOI3D1\",\n    line: \"LINE1\",\n    sourceType: \"AOI\",\n\n    timestamp: data[\"Test End Time\"]\n});\n\nreturn msg;\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -428,7 +428,7 @@
         "type": "function",
         "z": "9d4db24319f4b0b7",
         "name": "function 3",
-        "func": "var savedFileOnly = msg.fileOnly;\nvar savedFilename = msg.filename;\nvar lines = msg.payload.split('\\n');\nvar data = {};\n\nlines.forEach(function (line) {\n    line = line.trim();\n    if (line) {\n        var idx = line.indexOf(',');\n        if (idx !== -1) {\n            var key = line.substring(0, idx).trim();\n            var value = line.substring(idx + 1).trim().replace(/\"/g, '');\n            data[key] = value;\n        }\n    }\n});\n\nvar jsonPayload = JSON.stringify({\n    barcode: data[\"Barcode\"],\n    result: data[\"Result\"],\n    panelId: data[\"Panel ID\"],\n    programName: data[\"Program Name\"],\n    source: \"AOI\"\n});\n\n// msg1 goes to kafkajs-producer (needs JSON payload)\nvar msg1 = { payload: jsonPayload };\n\n// msg2 goes to mark processed (needs fileOnly)\nvar msg2 = {\n    payload: savedFileOnly,\n    fileOnly: savedFileOnly,\n    filename: savedFilename\n};\n\nreturn [msg1, msg2];",
+        "func": "var savedFileOnly = msg.fileOnly;\nvar savedFilename = msg.filename;\nvar lines = msg.payload.split('\\n');\nvar data = {};\n\nlines.forEach(function (line) {\n    line = line.trim();\n    if (line) {\n        var idx = line.indexOf(',');\n        if (idx !== -1) {\n            var key = line.substring(0, idx).trim();\n            var value = line.substring(idx + 1).trim().replace(/\"/g, '');\n            data[key] = value;\n        }\n    }\n});\n\nvar jsonPayload = JSON.stringify({\n\n    barcode: data[\"Barcode\"],\n    result: data[\"Result\"],\n    panelId: data[\"Panel ID\"],\n    programName: data[\"Program Name\"],\n\n    machine: \"AOI3D1\",\n    line: \"LINE1\",\n    sourceType: \"AOI\",\n\n    timestamp: data[\"Test End Time\"]\n\n});\n\n// msg1 goes to kafkajs-producer (needs JSON payload)\nvar msg1 = { payload: jsonPayload };\n\n// msg2 goes to mark processed (needs fileOnly)\nvar msg2 = {\n    payload: savedFileOnly,\n    fileOnly: savedFileOnly,\n    filename: savedFilename\n};\n\nreturn [msg1, msg2];",
         "outputs": 2,
         "timeout": 0,
         "noerr": 0,
@@ -682,7 +682,7 @@
         "type": "watch",
         "z": "9d4db24319f4b0b7",
         "name": "SPI1-watch",
-        "files": "/real-data/AOI3D1",
+        "files": "/real-data/SPI1",
         "recursive": "",
         "x": 110,
         "y": 1180,
@@ -698,7 +698,7 @@
         "type": "function",
         "z": "9d4db24319f4b0b7",
         "name": "function 6",
-        "func": "var lines = msg.payload.split('\\n');\nvar boardData = null;\nvar headers = null;\n\nfor (var i = 0; i < lines.length; i++) {\n    var line = lines[i].trim();\n    if (line === 'Board') {\n        // Next line is headers, line after is data\n        headers = lines[i + 1].trim().split(',');\n        var values = lines[i + 2] ? lines[i + 2].trim().split(',') : [];\n        if (values.length > 0) {\n            boardData = {};\n            headers.forEach(function (h, idx) {\n                boardData[h.trim()] = values[idx] ? values[idx].trim() : '';\n            });\n        }\n        break;\n    }\n}\n\nif (!boardData) {\n    return null; // skip if no board data\n}\n\nmsg.payload = JSON.stringify({\n    barcode: boardData[\"MasterBarcode\"],\n    inspectionDateTime: boardData[\"InspectionDateTime\"],\n    result: boardData[\"PCBResult\"],\n    side: boardData[\"Side\"],\n    source: \"SPI\"\n});\n\nreturn msg;",
+        "func": "var lines = msg.payload.split('\\n');\nvar boardData = null;\nvar headers = null;\n\nfor (var i = 0; i < lines.length; i++) {\n    var line = lines[i].trim();\n    if (line === 'Board') {\n        // Next line is headers, line after is data\n        headers = lines[i + 1].trim().split(',');\n        var values = lines[i + 2] ? lines[i + 2].trim().split(',') : [];\n        if (values.length > 0) {\n            boardData = {};\n            headers.forEach(function (h, idx) {\n                boardData[h.trim()] = values[idx] ? values[idx].trim() : '';\n            });\n        }\n        break;\n    }\n}\n\nif (!boardData) {\n    return null; // skip if no board data\n}\n\nmsg.payload = JSON.stringify({\n\n    barcode: boardData[\"MasterBarcode\"],\n\n    inspectionDateTime:\n        boardData[\"InspectionDateTime\"],\n\n    result:\n        boardData[\"PCBResult\"],\n\n    side:\n        boardData[\"Side\"],\n\n    machine: \"SPI1\",\n\n    line: \"LINE1\",\n\n    sourceType: \"SPI\",\n\n    timestamp:\n        boardData[\"InspectionDateTime\"]\n\n});\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -1038,7 +1038,7 @@
         "type": "function",
         "z": "9d4db24319f4b0b7",
         "name": "function 2",
-        "func": "var savedFileOnly = msg.fileOnly;\nvar savedFilename = msg.filename;\n\nvar lines = msg.payload.split('\\n');\nvar boardData = null;\nvar headers = null;\n\nfor (var i = 0; i < lines.length; i++) {\n\n    var line = lines[i].trim();\n\n    if (line === 'Board') {\n\n        headers = lines[i + 1].trim().split(',');\n\n        var values = lines[i + 2]\n            ? lines[i + 2].trim().split(',')\n            : [];\n\n        if (values.length > 0) {\n\n            boardData = {};\n\n            headers.forEach(function (h, idx) {\n\n                boardData[h.trim()] =\n                    values[idx]\n                        ? values[idx].trim()\n                        : '';\n\n            });\n\n        }\n\n        break;\n    }\n}\n\nif (!boardData) {\n    return null;\n}\n\nvar jsonPayload = JSON.stringify({\n\n    barcode: boardData[\"MasterBarcode\"],\n\n    inspectionDateTime:\n        boardData[\"InspectionDateTime\"],\n\n    result:\n        boardData[\"PCBResult\"],\n\n    side:\n        boardData[\"Side\"],\n\n    source: \"SPI\"\n\n});\n\n\n// Output 1 -> Kafka\n\nvar msg1 = {\n\n    payload: jsonPayload\n\n};\n\n\n// Output 2 -> Redis Mark Processed\n\nvar msg2 = {\n\n    payload: savedFileOnly,\n\n    fileOnly: savedFileOnly,\n\n    filename: savedFilename\n\n};\n\nreturn [msg1, msg2];",
+        "func": "var savedFileOnly = msg.fileOnly;\nvar savedFilename = msg.filename;\n\nvar lines = msg.payload.split('\\n');\nvar boardData = null;\nvar headers = null;\n\nfor (var i = 0; i < lines.length; i++) {\n\n    var line = lines[i].trim();\n\n    if (line === 'Board') {\n\n        headers = lines[i + 1].trim().split(',');\n\n        var values = lines[i + 2]\n            ? lines[i + 2].trim().split(',')\n            : [];\n\n        if (values.length > 0) {\n\n            boardData = {};\n\n            headers.forEach(function (h, idx) {\n\n                boardData[h.trim()] =\n                    values[idx]\n                        ? values[idx].trim()\n                        : '';\n\n            });\n\n        }\n\n        break;\n    }\n}\n\nif (!boardData) {\n    return null;\n}\n\nvar jsonPayload = JSON.stringify({\n\n    barcode: boardData[\"MasterBarcode\"],\n\n    inspectionDateTime:\n        boardData[\"InspectionDateTime\"],\n\n    result:\n        boardData[\"PCBResult\"],\n\n    side:\n        boardData[\"Side\"],\n\n    machine: \"SPI1\",\n    line: \"LINE1\",\n    sourceType: \"SPI\",\n\n    timestamp:\n        boardData[\"InspectionDateTime\"]\n\n});\n\n\n// Output 1 -> Kafka\n\nvar msg1 = {\n\n    payload: jsonPayload\n\n};\n\n\n// Output 2 -> Redis Mark Processed\n\nvar msg2 = {\n\n    payload: savedFileOnly,\n\n    fileOnly: savedFileOnly,\n\n    filename: savedFilename\n\n};\n\nreturn [msg1, msg2];",
         "outputs": 2,
         "timeout": 0,
         "noerr": 0,
@@ -1269,6 +1269,1888 @@
         "allowautotopiccreation": false,
         "x": 1000,
         "y": 1860,
+        "wires": []
+    },
+    {
+        "id": "8bc89bc3053fc6be",
+        "type": "watch",
+        "z": "9d4db24319f4b0b7",
+        "name": "AOI2-watch",
+        "files": "/real-data/AOI2",
+        "recursive": "",
+        "x": 130,
+        "y": 2220,
+        "wires": [
+            [
+                "4b369f2db99a3370",
+                "0b4cbe5757548524"
+            ]
+        ]
+    },
+    {
+        "id": "10915955433197d7",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "function 8",
+        "func": "var savedFileOnly = msg.fileOnly;\nvar savedFilename = msg.filename;\n\nvar lines = msg.payload.split('\\n');\nvar data = {};\n\nlines.forEach(function (line) {\n    line = line.trim();\n\n    if (line) {\n\n        var idx = line.indexOf(',');\n\n        if (idx !== -1) {\n\n            var key = line.substring(0, idx).trim();\n\n            var value = line.substring(idx + 1)\n                .trim()\n                .replace(/\"/g, '');\n\n            data[key] = value;\n        }\n    }\n});\n\nvar jsonPayload = JSON.stringify({\n\n    barcode: data[\"Barcode\"],\n\n    result: data[\"Result\"],\n\n    panelId: data[\"Panel ID\"],\n\n    programName: data[\"Program Name\"],\n\n    machine: \"AOI2\",\n\n    line: \"LINE2\",\n\n    sourceType: \"AOI\",\n\n    timestamp: data[\"Test End Time\"]\n\n});\n\nvar msg1 = {\n    payload: jsonPayload\n};\n\nvar msg2 = {\n    payload: savedFileOnly,\n    fileOnly: savedFileOnly,\n    filename: savedFilename\n};\n\nreturn [msg1, msg2];",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 760,
+        "y": 2400,
+        "wires": [
+            [
+                "f087f6dc45253faa",
+                "1442405ab5a09ce0"
+            ]
+        ]
+    },
+    {
+        "id": "ffc6c06ef58eb730",
+        "type": "file in",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "filename": "payload",
+        "filenameType": "msg",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": false,
+        "x": 600,
+        "y": 2360,
+        "wires": [
+            [
+                "02ae95f91668ba69",
+                "10915955433197d7"
+            ]
+        ]
+    },
+    {
+        "id": "f087f6dc45253faa",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 10",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 960,
+        "y": 2360,
+        "wires": []
+    },
+    {
+        "id": "02ae95f91668ba69",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 11",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 780,
+        "y": 2320,
+        "wires": []
+    },
+    {
+        "id": "4b369f2db99a3370",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 12",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 300,
+        "y": 2160,
+        "wires": []
+    },
+    {
+        "id": "0b4cbe5757548524",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "aoi2 Extract ",
+        "func": "msg.filename = msg.payload;\n\nlet parts = msg.payload.split(\"/\");\nmsg.fileOnly = parts[parts.length - 1];\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 330,
+        "y": 2220,
+        "wires": [
+            [
+                "1a0e0bcd4a49b6e5",
+                "3566da1de22e2162"
+            ]
+        ]
+    },
+    {
+        "id": "1a0e0bcd4a49b6e5",
+        "type": "redis-command",
+        "z": "9d4db24319f4b0b7",
+        "server": "fefb39603165678d",
+        "command": "SISMEMBER",
+        "name": "Check P File",
+        "topic": "processed_files_aoi2",
+        "params": "[msg.fileOnly]",
+        "paramsType": "json",
+        "payloadType": "json",
+        "block": false,
+        "x": 510,
+        "y": 2220,
+        "wires": [
+            [
+                "c0fbae236d7932d2",
+                "aaf025f9bf484e92"
+            ]
+        ]
+    },
+    {
+        "id": "c0fbae236d7932d2",
+        "type": "switch",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 710,
+        "y": 2220,
+        "wires": [
+            [
+                "e8e6faa06f0fb4d5",
+                "ed2c561228268420"
+            ],
+            [
+                "5094b64a26cc0685"
+            ]
+        ]
+    },
+    {
+        "id": "aaf025f9bf484e92",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 13",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 680,
+        "y": 2160,
+        "wires": []
+    },
+    {
+        "id": "5094b64a26cc0685",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 14",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 900,
+        "y": 2240,
+        "wires": []
+    },
+    {
+        "id": "3566da1de22e2162",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 15",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 500,
+        "y": 2160,
+        "wires": []
+    },
+    {
+        "id": "e8e6faa06f0fb4d5",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "function 9",
+        "func": "msg.payload = msg.filename;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 440,
+        "y": 2340,
+        "wires": [
+            [
+                "ffc6c06ef58eb730"
+            ]
+        ]
+    },
+    {
+        "id": "ed2c561228268420",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 16",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 900,
+        "y": 2160,
+        "wires": []
+    },
+    {
+        "id": "1442405ab5a09ce0",
+        "type": "kafkajs-producer",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "client": "ffae8fba2de6c069",
+        "topic": "aoi-topic",
+        "advancedoptions": false,
+        "acknowledge": "all",
+        "partition": "",
+        "headeritems": {},
+        "key": "",
+        "responsetimeout": 30000,
+        "transactiontimeout": 60000,
+        "metadatamaxage": 300000,
+        "allowautotopiccreation": false,
+        "x": 960,
+        "y": 2440,
+        "wires": []
+    },
+    {
+        "id": "34112b311739a3d6",
+        "type": "exec",
+        "z": "9d4db24319f4b0b7",
+        "command": "find /real-data/AOI2 -name \"*.csv\"",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "aoi2 exec",
+        "x": 340,
+        "y": 2560,
+        "wires": [
+            [
+                "31db43ba6cb32ab6"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "c2c0b0bbfe1fd6a3",
+        "type": "inject",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 180,
+        "y": 2540,
+        "wires": [
+            [
+                "34112b311739a3d6"
+            ]
+        ]
+    },
+    {
+        "id": "31db43ba6cb32ab6",
+        "type": "split",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "property": "payload",
+        "x": 490,
+        "y": 2580,
+        "wires": [
+            [
+                "ba09e79655016b05"
+            ]
+        ]
+    },
+    {
+        "id": "ba09e79655016b05",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "AOI2 Extract ",
+        "func": "msg.filename = msg.payload;\n\nlet parts = msg.payload.split(\"/\");\nmsg.fileOnly = parts[parts.length - 1];\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 650,
+        "y": 2580,
+        "wires": [
+            [
+                "6f99cad297b4c5dc",
+                "ebb61274d525e396"
+            ]
+        ]
+    },
+    {
+        "id": "10137ed5d17afa4c",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "function 10",
+        "func": "var savedFileOnly = msg.fileOnly;\nvar savedFilename = msg.filename;\n\nvar lines = msg.payload.split('\\n');\nvar data = {};\n\nlines.forEach(function (line) {\n\n    line = line.trim();\n\n    if (line) {\n\n        var idx = line.indexOf(',');\n\n        if (idx !== -1) {\n\n            var key = line.substring(0, idx).trim();\n\n            var value = line\n                .substring(idx + 1)\n                .trim()\n                .replace(/\"/g, '');\n\n            data[key] = value;\n        }\n    }\n});\n\nvar jsonPayload = JSON.stringify({\n\n    barcode: data[\"Barcode\"],\n\n    result: data[\"Result\"],\n\n    panelId: data[\"Panel ID\"],\n\n    programName: data[\"Program Name\"],\n\n    machine: \"AOI2\",\n\n    line: \"LINE2\",\n\n    sourceType: \"AOI\",\n\n    timestamp: data[\"Test End Time\"]\n\n});\n\n\n// Output 1 -> Kafka\n\nvar msg1 = {\n\n    payload: jsonPayload\n\n};\n\n\n// Output 2 -> Redis Mark Processed\n\nvar msg2 = {\n\n    payload: savedFileOnly,\n\n    fileOnly: savedFileOnly,\n\n    filename: savedFilename\n\n};\n\nreturn [msg1, msg2];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 780,
+        "y": 2840,
+        "wires": [
+            [
+                "38b80a79a7b9d229",
+                "24326d252cb047d9"
+            ],
+            [
+                "168947b6b07f3dcf"
+            ]
+        ]
+    },
+    {
+        "id": "66ea6920b220d908",
+        "type": "file in",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "filename": "payload",
+        "filenameType": "msg",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": false,
+        "x": 620,
+        "y": 2800,
+        "wires": [
+            [
+                "10137ed5d17afa4c",
+                "601dc6525187d93b"
+            ]
+        ]
+    },
+    {
+        "id": "6f99cad297b4c5dc",
+        "type": "redis-command",
+        "z": "9d4db24319f4b0b7",
+        "server": "fefb39603165678d",
+        "command": "SISMEMBER",
+        "name": "Check P File",
+        "topic": "processed_files_aoi2",
+        "params": "[msg.fileOnly]",
+        "paramsType": "json",
+        "payloadType": "json",
+        "block": false,
+        "x": 150,
+        "y": 2700,
+        "wires": [
+            [
+                "cfee9411a4e0f26e"
+            ]
+        ]
+    },
+    {
+        "id": "cfee9411a4e0f26e",
+        "type": "switch",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 290,
+        "y": 2740,
+        "wires": [
+            [
+                "37aa431a36010736",
+                "5c26635419750ca4"
+            ],
+            [
+                "75b335998c958df2"
+            ]
+        ]
+    },
+    {
+        "id": "75b335998c958df2",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 23",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 380,
+        "y": 2840,
+        "wires": []
+    },
+    {
+        "id": "168947b6b07f3dcf",
+        "type": "redis-command",
+        "z": "9d4db24319f4b0b7",
+        "server": "fefb39603165678d",
+        "command": "SADD",
+        "name": "mark processed",
+        "topic": "processed_files_aoi2",
+        "params": "[\"msg.fileOnly\"]",
+        "paramsType": "json",
+        "payloadType": "json",
+        "block": false,
+        "x": 1000,
+        "y": 2920,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ebb61274d525e396",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 24",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 860,
+        "y": 2580,
+        "wires": []
+    },
+    {
+        "id": "38b80a79a7b9d229",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 25",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 920,
+        "y": 2760,
+        "wires": []
+    },
+    {
+        "id": "37aa431a36010736",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "function 11",
+        "func": "msg.payload = msg.filename;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 2760,
+        "wires": [
+            [
+                "5255f74c32ac27f0",
+                "66ea6920b220d908"
+            ]
+        ]
+    },
+    {
+        "id": "5255f74c32ac27f0",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 26",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 660,
+        "y": 2720,
+        "wires": []
+    },
+    {
+        "id": "5c26635419750ca4",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 27",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 440,
+        "y": 2680,
+        "wires": []
+    },
+    {
+        "id": "24326d252cb047d9",
+        "type": "kafkajs-producer",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "client": "ffae8fba2de6c069",
+        "topic": "aoi-topic",
+        "advancedoptions": false,
+        "acknowledge": "all",
+        "partition": "",
+        "headeritems": {},
+        "key": "",
+        "responsetimeout": 30000,
+        "transactiontimeout": 60000,
+        "metadatamaxage": 300000,
+        "allowautotopiccreation": false,
+        "x": 1000,
+        "y": 2840,
+        "wires": []
+    },
+    {
+        "id": "657944694f4853ee",
+        "type": "watch",
+        "z": "9d4db24319f4b0b7",
+        "name": "SPI2-watch",
+        "files": "/real-data/SPI2",
+        "recursive": "",
+        "x": 130,
+        "y": 3140,
+        "wires": [
+            [
+                "9130f35a8d28ef32",
+                "a17a131d82725ce8"
+            ]
+        ]
+    },
+    {
+        "id": "7cf59cf99493ef12",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "function 12",
+        "func": "var lines = msg.payload.split('\\n');\nvar boardData = null;\nvar headers = null;\n\nfor (var i = 0; i < lines.length; i++) {\n\n    var line = lines[i].trim();\n\n    if (line === 'Board') {\n\n        headers = lines[i + 1].trim().split(',');\n\n        var values = lines[i + 2]\n            ? lines[i + 2].trim().split(',')\n            : [];\n\n        if (values.length > 0) {\n\n            boardData = {};\n\n            headers.forEach(function (h, idx) {\n\n                boardData[h.trim()] =\n                    values[idx]\n                        ? values[idx].trim()\n                        : '';\n\n            });\n\n        }\n\n        break;\n    }\n}\n\nif (!boardData) {\n    return null;\n}\n\nmsg.payload = JSON.stringify({\n\n    barcode: boardData[\"MasterBarcode\"],\n\n    inspectionDateTime:\n        boardData[\"InspectionDateTime\"],\n\n    result:\n        boardData[\"PCBResult\"],\n\n    side:\n        boardData[\"Side\"],\n\n    machine: \"SPI2\",\n\n    line: \"LINE2\",\n\n    sourceType: \"SPI\",\n\n    timestamp:\n        boardData[\"InspectionDateTime\"]\n\n});\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 760,
+        "y": 3320,
+        "wires": [
+            [
+                "ca43f73374e954fb",
+                "8cfdd88c8b14a86a"
+            ]
+        ]
+    },
+    {
+        "id": "ef51cfd05fdcd746",
+        "type": "file in",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "filename": "payload",
+        "filenameType": "msg",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": false,
+        "x": 600,
+        "y": 3280,
+        "wires": [
+            [
+                "6739db7422876c9a",
+                "7cf59cf99493ef12"
+            ]
+        ]
+    },
+    {
+        "id": "ca43f73374e954fb",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 28",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 960,
+        "y": 3280,
+        "wires": []
+    },
+    {
+        "id": "6739db7422876c9a",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 29",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 780,
+        "y": 3240,
+        "wires": []
+    },
+    {
+        "id": "9130f35a8d28ef32",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 30",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 300,
+        "y": 3080,
+        "wires": []
+    },
+    {
+        "id": "a17a131d82725ce8",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "SPI2 Extract ",
+        "func": "msg.filename = msg.payload;\n\nlet parts = msg.payload.split(\"/\");\nmsg.fileOnly = parts[parts.length - 1];\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 330,
+        "y": 3140,
+        "wires": [
+            [
+                "dfdcf5ef4cfa1c74",
+                "2fa581e232f80a2b"
+            ]
+        ]
+    },
+    {
+        "id": "dfdcf5ef4cfa1c74",
+        "type": "redis-command",
+        "z": "9d4db24319f4b0b7",
+        "server": "fefb39603165678d",
+        "command": "SISMEMBER",
+        "name": "Check P File",
+        "topic": "processed_files_spi2",
+        "params": "[msg.fileOnly]",
+        "paramsType": "json",
+        "payloadType": "json",
+        "block": false,
+        "x": 510,
+        "y": 3140,
+        "wires": [
+            [
+                "f8826f947a52d18c",
+                "c2ceedc518e67a84"
+            ]
+        ]
+    },
+    {
+        "id": "f8826f947a52d18c",
+        "type": "switch",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 710,
+        "y": 3140,
+        "wires": [
+            [
+                "cc68cb17cad248ff",
+                "59232019d5c704f7"
+            ],
+            [
+                "a1ace00b8cdb97ad"
+            ]
+        ]
+    },
+    {
+        "id": "c2ceedc518e67a84",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 31",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 680,
+        "y": 3080,
+        "wires": []
+    },
+    {
+        "id": "a1ace00b8cdb97ad",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 32",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 900,
+        "y": 3160,
+        "wires": []
+    },
+    {
+        "id": "2fa581e232f80a2b",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 33",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 500,
+        "y": 3080,
+        "wires": []
+    },
+    {
+        "id": "cc68cb17cad248ff",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "function 13",
+        "func": "msg.payload = msg.filename;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 440,
+        "y": 3260,
+        "wires": [
+            [
+                "ef51cfd05fdcd746"
+            ]
+        ]
+    },
+    {
+        "id": "59232019d5c704f7",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 34",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 900,
+        "y": 3080,
+        "wires": []
+    },
+    {
+        "id": "8cfdd88c8b14a86a",
+        "type": "kafkajs-producer",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "client": "ffae8fba2de6c069",
+        "topic": "spi-topic",
+        "advancedoptions": false,
+        "acknowledge": "all",
+        "partition": "",
+        "headeritems": {},
+        "key": "",
+        "responsetimeout": 30000,
+        "transactiontimeout": 60000,
+        "metadatamaxage": 300000,
+        "allowautotopiccreation": false,
+        "x": 960,
+        "y": 3360,
+        "wires": []
+    },
+    {
+        "id": "4eaa93e1757b2f48",
+        "type": "exec",
+        "z": "9d4db24319f4b0b7",
+        "command": "find /real-data/SPI2 -name \"*.CSV\"",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "spi2 exec",
+        "x": 340,
+        "y": 3500,
+        "wires": [
+            [
+                "364bb1d112c53224"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "f76d96c660017a2a",
+        "type": "inject",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 180,
+        "y": 3480,
+        "wires": [
+            [
+                "4eaa93e1757b2f48"
+            ]
+        ]
+    },
+    {
+        "id": "364bb1d112c53224",
+        "type": "split",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "property": "payload",
+        "x": 490,
+        "y": 3520,
+        "wires": [
+            [
+                "f6b9c200d232e784"
+            ]
+        ]
+    },
+    {
+        "id": "f6b9c200d232e784",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "SPI2 Extract ",
+        "func": "msg.filename = msg.payload;\n\nlet parts = msg.payload.split(\"/\");\nmsg.fileOnly = parts[parts.length - 1];\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 650,
+        "y": 3520,
+        "wires": [
+            [
+                "698901edfbc6bc21",
+                "af655515f1dfe0ca"
+            ]
+        ]
+    },
+    {
+        "id": "eefc79422f8998aa",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "function 14",
+        "func": "var savedFileOnly = msg.fileOnly;\nvar savedFilename = msg.filename;\n\nvar lines = msg.payload.split('\\n');\nvar boardData = null;\nvar headers = null;\n\nfor (var i = 0; i < lines.length; i++) {\n\n    var line = lines[i].trim();\n\n    if (line === 'Board') {\n\n        headers = lines[i + 1].trim().split(',');\n\n        var values = lines[i + 2]\n            ? lines[i + 2].trim().split(',')\n            : [];\n\n        if (values.length > 0) {\n\n            boardData = {};\n\n            headers.forEach(function (h, idx) {\n\n                boardData[h.trim()] =\n                    values[idx]\n                        ? values[idx].trim()\n                        : '';\n\n            });\n\n        }\n\n        break;\n    }\n}\n\nif (!boardData) {\n    return null;\n}\n\nvar jsonPayload = JSON.stringify({\n\n    barcode: boardData[\"MasterBarcode\"],\n\n    inspectionDateTime:\n        boardData[\"InspectionDateTime\"],\n\n    result:\n        boardData[\"PCBResult\"],\n\n    side:\n        boardData[\"Side\"],\n\n    machine: \"SPI2\",\n\n    line: \"LINE2\",\n\n    sourceType: \"SPI\",\n\n    timestamp:\n        boardData[\"InspectionDateTime\"]\n\n});\n\nvar msg1 = {\n    payload: jsonPayload\n};\n\nvar msg2 = {\n    payload: savedFileOnly,\n    fileOnly: savedFileOnly,\n    filename: savedFilename\n};\n\nreturn [msg1, msg2];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 780,
+        "y": 3780,
+        "wires": [
+            [
+                "38e97bee23509386",
+                "053a4246e076378c"
+            ],
+            [
+                "599e1b1146de367c"
+            ]
+        ]
+    },
+    {
+        "id": "fd5330f6bb647a1c",
+        "type": "file in",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "filename": "payload",
+        "filenameType": "msg",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": false,
+        "x": 620,
+        "y": 3740,
+        "wires": [
+            [
+                "eefc79422f8998aa"
+            ]
+        ]
+    },
+    {
+        "id": "698901edfbc6bc21",
+        "type": "redis-command",
+        "z": "9d4db24319f4b0b7",
+        "server": "fefb39603165678d",
+        "command": "SISMEMBER",
+        "name": "Check P File",
+        "topic": "processed_files_spi2",
+        "params": "[msg.fileOnly]",
+        "paramsType": "json",
+        "payloadType": "json",
+        "block": false,
+        "x": 150,
+        "y": 3640,
+        "wires": [
+            [
+                "5005c672b03823f9"
+            ]
+        ]
+    },
+    {
+        "id": "5005c672b03823f9",
+        "type": "switch",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 290,
+        "y": 3680,
+        "wires": [
+            [
+                "29b62fc376969998",
+                "1d5734bb5a328dc7"
+            ],
+            [
+                "74b661b623f2c816"
+            ]
+        ]
+    },
+    {
+        "id": "74b661b623f2c816",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 35",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 380,
+        "y": 3780,
+        "wires": []
+    },
+    {
+        "id": "599e1b1146de367c",
+        "type": "redis-command",
+        "z": "9d4db24319f4b0b7",
+        "server": "fefb39603165678d",
+        "command": "SADD",
+        "name": "mark processed",
+        "topic": "processed_files_spi2",
+        "params": "[\"msg.fileOnly\"]",
+        "paramsType": "json",
+        "payloadType": "json",
+        "block": false,
+        "x": 1000,
+        "y": 3860,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "af655515f1dfe0ca",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 36",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 860,
+        "y": 3520,
+        "wires": []
+    },
+    {
+        "id": "38e97bee23509386",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 37",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 920,
+        "y": 3700,
+        "wires": []
+    },
+    {
+        "id": "29b62fc376969998",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "function 15",
+        "func": "msg.payload = msg.filename;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 3700,
+        "wires": [
+            [
+                "3546d54facbdd393",
+                "fd5330f6bb647a1c"
+            ]
+        ]
+    },
+    {
+        "id": "3546d54facbdd393",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 38",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 660,
+        "y": 3660,
+        "wires": []
+    },
+    {
+        "id": "1d5734bb5a328dc7",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 39",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 440,
+        "y": 3620,
+        "wires": []
+    },
+    {
+        "id": "053a4246e076378c",
+        "type": "kafkajs-producer",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "client": "ffae8fba2de6c069",
+        "topic": "spi-topic",
+        "advancedoptions": false,
+        "acknowledge": "all",
+        "partition": "",
+        "headeritems": {},
+        "key": "",
+        "responsetimeout": 30000,
+        "transactiontimeout": 60000,
+        "metadatamaxage": 300000,
+        "allowautotopiccreation": false,
+        "x": 1000,
+        "y": 3780,
+        "wires": []
+    },
+    {
+        "id": "faf7680cdf902ce8",
+        "type": "watch",
+        "z": "9d4db24319f4b0b7",
+        "name": "FCR2-watch",
+        "files": "/real-data/FCR2",
+        "recursive": "",
+        "x": 150,
+        "y": 4120,
+        "wires": [
+            [
+                "d2a96fcf5f218378",
+                "c1aadc390e2f5710"
+            ]
+        ]
+    },
+    {
+        "id": "c9f94beca590f168",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "function 16",
+        "func": "var savedFileOnly = msg.fileOnly;\nvar savedFilename = msg.filename;\n\nvar lines = msg.payload.split('\\n');\nvar data = {};\n\nlines.forEach(function (line) {\n\n    line = line.trim();\n\n    if (line) {\n\n        var idx = line.indexOf(',');\n\n        if (idx !== -1) {\n\n            var key = line.substring(0, idx).trim();\n\n            var value = line.substring(idx + 1)\n                .trim()\n                .replace(/\"/g, '');\n\n            data[key] = value;\n        }\n    }\n});\n\nmsg.payload = JSON.stringify({\n\n    barcode: data[\"Barcode\"],\n\n    result: data[\"Result\"],\n\n    panelId: data[\"Panel ID\"],\n\n    programName: data[\"Program Name\"],\n\n    machine: \"FCR2\",\n\n    line: \"LINE2\",\n\n    sourceType: \"FCR\",\n\n    timestamp: data[\"Test End Time\"]\n\n});\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 780,
+        "y": 4300,
+        "wires": [
+            [
+                "6d21933d61884e6b",
+                "4b2bd20a86b30d02"
+            ]
+        ]
+    },
+    {
+        "id": "2385e140385c5587",
+        "type": "file in",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "filename": "payload",
+        "filenameType": "msg",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": false,
+        "x": 620,
+        "y": 4260,
+        "wires": [
+            [
+                "b32ba169ab8ff879",
+                "c9f94beca590f168"
+            ]
+        ]
+    },
+    {
+        "id": "6d21933d61884e6b",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 40",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 980,
+        "y": 4260,
+        "wires": []
+    },
+    {
+        "id": "b32ba169ab8ff879",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 41",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 800,
+        "y": 4220,
+        "wires": []
+    },
+    {
+        "id": "d2a96fcf5f218378",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 42",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 320,
+        "y": 4060,
+        "wires": []
+    },
+    {
+        "id": "c1aadc390e2f5710",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "FCR2 Extract ",
+        "func": "msg.filename = msg.payload;\n\nlet parts = msg.payload.split(\"/\");\nmsg.fileOnly = parts[parts.length - 1];\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 4120,
+        "wires": [
+            [
+                "40ca6987c9218826",
+                "010ee3185313ab4d"
+            ]
+        ]
+    },
+    {
+        "id": "40ca6987c9218826",
+        "type": "redis-command",
+        "z": "9d4db24319f4b0b7",
+        "server": "fefb39603165678d",
+        "command": "SISMEMBER",
+        "name": "Check P File",
+        "topic": "processed_files_fcr2",
+        "params": "[msg.fileOnly]",
+        "paramsType": "json",
+        "payloadType": "json",
+        "block": false,
+        "x": 530,
+        "y": 4120,
+        "wires": [
+            [
+                "ccf3bff5154b702a",
+                "8d245082d889390a"
+            ]
+        ]
+    },
+    {
+        "id": "ccf3bff5154b702a",
+        "type": "switch",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 730,
+        "y": 4120,
+        "wires": [
+            [
+                "0abd091b523c5aad",
+                "1762c5de360b3512"
+            ],
+            [
+                "1dd756a900f153bc"
+            ]
+        ]
+    },
+    {
+        "id": "8d245082d889390a",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 43",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 700,
+        "y": 4060,
+        "wires": []
+    },
+    {
+        "id": "1dd756a900f153bc",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 44",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 920,
+        "y": 4140,
+        "wires": []
+    },
+    {
+        "id": "010ee3185313ab4d",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 45",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 520,
+        "y": 4060,
+        "wires": []
+    },
+    {
+        "id": "0abd091b523c5aad",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "function 17",
+        "func": "msg.payload = msg.filename;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 4240,
+        "wires": [
+            [
+                "2385e140385c5587"
+            ]
+        ]
+    },
+    {
+        "id": "1762c5de360b3512",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 46",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 920,
+        "y": 4060,
+        "wires": []
+    },
+    {
+        "id": "4b2bd20a86b30d02",
+        "type": "kafkajs-producer",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "client": "ffae8fba2de6c069",
+        "topic": "fcr-topic",
+        "advancedoptions": false,
+        "acknowledge": "all",
+        "partition": "",
+        "headeritems": {},
+        "key": "",
+        "responsetimeout": 30000,
+        "transactiontimeout": 60000,
+        "metadatamaxage": 300000,
+        "allowautotopiccreation": false,
+        "x": 980,
+        "y": 4340,
+        "wires": []
+    },
+    {
+        "id": "2baf7129240b7912",
+        "type": "exec",
+        "z": "9d4db24319f4b0b7",
+        "command": "find /real-data/FCR2 -name \"*.csv\"",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "fcr2 exec",
+        "x": 360,
+        "y": 4500,
+        "wires": [
+            [
+                "e464af91e82efbdf"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "5331500e4f3206e4",
+        "type": "inject",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 200,
+        "y": 4480,
+        "wires": [
+            [
+                "2baf7129240b7912"
+            ]
+        ]
+    },
+    {
+        "id": "e464af91e82efbdf",
+        "type": "split",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "property": "payload",
+        "x": 510,
+        "y": 4520,
+        "wires": [
+            [
+                "050e42b2fff3303d"
+            ]
+        ]
+    },
+    {
+        "id": "050e42b2fff3303d",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "FCR2 Extract ",
+        "func": "msg.filename = msg.payload;\n\nlet parts = msg.payload.split(\"/\");\nmsg.fileOnly = parts[parts.length - 1];\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 680,
+        "y": 4520,
+        "wires": [
+            [
+                "2e54a1c767acdeb7",
+                "8e0856264bbf99ca"
+            ]
+        ]
+    },
+    {
+        "id": "725008c95f9f02b8",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "function 18",
+        "func": "var savedFileOnly = msg.fileOnly;\nvar savedFilename = msg.filename;\n\nvar lines = msg.payload.split('\\n');\nvar data = {};\n\nlines.forEach(function (line) {\n\n    line = line.trim();\n\n    if (line) {\n\n        var idx = line.indexOf(',');\n\n        if (idx !== -1) {\n\n            var key = line.substring(0, idx).trim();\n\n            var value = line.substring(idx + 1)\n                .trim()\n                .replace(/\"/g, '');\n\n            data[key] = value;\n        }\n    }\n});\n\nvar jsonPayload = JSON.stringify({\n\n    barcode: data[\"Barcode\"],\n\n    result: data[\"Result\"],\n\n    panelId: data[\"Panel ID\"],\n\n    programName: data[\"Program Name\"],\n\n    machine: \"FCR2\",\n\n    line: \"LINE2\",\n\n    sourceType: \"FCR\",\n\n    timestamp: data[\"Test End Time\"]\n\n});\n\nvar msg1 = {\n    payload: jsonPayload\n};\n\nvar msg2 = {\n    payload: savedFileOnly,\n    fileOnly: savedFileOnly,\n    filename: savedFilename\n};\n\nreturn [msg1, msg2];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 850,
+        "y": 4780,
+        "wires": [
+            [
+                "bb7f7a13a4af303d",
+                "a35a40cd8ef278c4"
+            ],
+            [
+                "85aec9881bc218d9"
+            ]
+        ]
+    },
+    {
+        "id": "c655d3a6241a4a2e",
+        "type": "file in",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "filename": "payload",
+        "filenameType": "msg",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": false,
+        "x": 700,
+        "y": 4740,
+        "wires": [
+            [
+                "725008c95f9f02b8"
+            ]
+        ]
+    },
+    {
+        "id": "2e54a1c767acdeb7",
+        "type": "redis-command",
+        "z": "9d4db24319f4b0b7",
+        "server": "fefb39603165678d",
+        "command": "SISMEMBER",
+        "name": "Check P File",
+        "topic": "processed_files_fcr2",
+        "params": "[msg.fileOnly]",
+        "paramsType": "json",
+        "payloadType": "json",
+        "block": false,
+        "x": 170,
+        "y": 4640,
+        "wires": [
+            [
+                "850ac31b1c8d09ab",
+                "3677867f0a435ab1"
+            ]
+        ]
+    },
+    {
+        "id": "850ac31b1c8d09ab",
+        "type": "switch",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 350,
+        "y": 4680,
+        "wires": [
+            [
+                "048a22568377bdb4",
+                "962853cfd85096ea"
+            ],
+            [
+                "2bb6782634753aab"
+            ]
+        ]
+    },
+    {
+        "id": "2bb6782634753aab",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 47",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 400,
+        "y": 4780,
+        "wires": []
+    },
+    {
+        "id": "85aec9881bc218d9",
+        "type": "redis-command",
+        "z": "9d4db24319f4b0b7",
+        "server": "fefb39603165678d",
+        "command": "SADD",
+        "name": "mark processed",
+        "topic": "processed_files_fcr2",
+        "params": "[\"msg.fileOnly\"]",
+        "paramsType": "json",
+        "payloadType": "json",
+        "block": false,
+        "x": 1020,
+        "y": 4860,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "8e0856264bbf99ca",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 48",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 880,
+        "y": 4520,
+        "wires": []
+    },
+    {
+        "id": "bb7f7a13a4af303d",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 49",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 940,
+        "y": 4700,
+        "wires": []
+    },
+    {
+        "id": "048a22568377bdb4",
+        "type": "function",
+        "z": "9d4db24319f4b0b7",
+        "name": "function 19",
+        "func": "msg.payload = msg.filename;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 550,
+        "y": 4700,
+        "wires": [
+            [
+                "74cd835e81a7df0c",
+                "c655d3a6241a4a2e"
+            ]
+        ]
+    },
+    {
+        "id": "74cd835e81a7df0c",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 50",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 680,
+        "y": 4660,
+        "wires": []
+    },
+    {
+        "id": "962853cfd85096ea",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 51",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 460,
+        "y": 4620,
+        "wires": []
+    },
+    {
+        "id": "a35a40cd8ef278c4",
+        "type": "kafkajs-producer",
+        "z": "9d4db24319f4b0b7",
+        "name": "",
+        "client": "ffae8fba2de6c069",
+        "topic": "fcr-topic",
+        "advancedoptions": false,
+        "acknowledge": "all",
+        "partition": "",
+        "headeritems": {},
+        "key": "",
+        "responsetimeout": 30000,
+        "transactiontimeout": 60000,
+        "metadatamaxage": 300000,
+        "allowautotopiccreation": false,
+        "x": 1070,
+        "y": 4780,
+        "wires": []
+    },
+    {
+        "id": "3677867f0a435ab1",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 52",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 160,
+        "y": 4720,
+        "wires": []
+    },
+    {
+        "id": "601dc6525187d93b",
+        "type": "debug",
+        "z": "9d4db24319f4b0b7",
+        "name": "debug 53",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 900,
+        "y": 2700,
         "wires": []
     }
 ]

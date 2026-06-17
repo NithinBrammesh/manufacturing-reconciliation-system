@@ -169,9 +169,9 @@ def process_aoi(record):
 
         update_metrics(r)
 
-        print(
-            f"AOI Processed | Barcode={barcode} | Added={added}"
-        )
+        # print(
+        #     f"AOI Processed | Barcode={barcode} | Added={added}"
+        # )
 
         return record
 
@@ -211,9 +211,9 @@ def process_spi(record):
 
         update_metrics(r)
 
-        print(
-            f"SPI Processed | Barcode={barcode} | Added={added}"
-        )
+        # print(
+        #     f"SPI Processed | Barcode={barcode} | Added={added}"
+        # )
 
         return record
 
