@@ -1,6 +1,6 @@
 import json
 import redis
-
+from config.load_config import topics
 from pyflink.datastream import StreamExecutionEnvironment
 from pyflink.common.serialization import SimpleStringSchema
 from pyflink.common.watermark_strategy import WatermarkStrategy
@@ -28,179 +28,240 @@ startup_redis = redis.Redis(
 
 # Uncomment if you want fresh metrics every restart
 
-startup_redis.delete("aoi_barcodes")
-startup_redis.delete("spi_barcodes")
-startup_redis.delete("fcr_barcodes")
-startup_redis.delete("reconciliation_metrics")
+for key in startup_redis.keys("metrics:*"):
+    startup_redis.delete(key)
+
+for key in startup_redis.keys("line:*"):
+    startup_redis.delete(key)
+
 
 print("Redis reconciliation data cleared")
+
+
+# =====================================================
+# SAVE BARCODE
+# =====================================================
+
+def save_barcode(r, data):
+
+    line = data.get("line")
+
+    machine = data.get("machine")
+
+    barcode = data.get("barcode")
+
+    if not line or not machine or not barcode:
+
+        return False
+
+    redis_key = f"line:{line}:{machine}"
+
+    r.sadd(redis_key, barcode)
+
+    return True
+
 
 # =====================================================
 # METRICS CALCULATION
 # =====================================================
+
+
 def update_metrics(r):
 
-    # =====================================================
-    # FETCH REDIS SETS
-    # =====================================================
+    # Fetch all machine keys
+    line_keys = r.keys("line:*")
 
-    aoi_set = set(r.smembers("aoi_barcodes"))
-    spi_set = set(r.smembers("spi_barcodes"))
-    fcr_set = set(r.smembers("fcr_barcodes"))
+    lines = {}
 
-    # =====================================================
-    # TOTAL RECORDS
-    # =====================================================
+    for key in line_keys:
 
-    total_aoi = len(aoi_set)
-    total_spi = len(spi_set)
-    total_fcr = len(fcr_set)
+        _, line, machine = key.split(":")
 
-    # =====================================================
-    # AOI ↔ SPI
-    # =====================================================
+        if line not in lines:
+            lines[line] = {}
 
-    aoi_spi_matched = aoi_set.intersection(spi_set)
-    aoi_missing_in_spi = aoi_set - spi_set
-    spi_missing_in_aoi = spi_set - aoi_set
-
-    # =====================================================
-    # AOI ↔ FCR
-    # =====================================================
-
-    aoi_fcr_matched = aoi_set.intersection(fcr_set)
-    aoi_missing_in_fcr = aoi_set - fcr_set
-    fcr_missing_in_aoi = fcr_set - aoi_set
-
-    # =====================================================
-    # SPI ↔ FCR
-    # =====================================================
-
-    spi_fcr_matched = spi_set.intersection(fcr_set)
-    spi_missing_in_fcr = spi_set - fcr_set
-    fcr_missing_in_spi = fcr_set - spi_set
+        lines[line][machine] = set(r.smembers(key))
 
 
-    # =====================================================
-    # ALL THREE MACHINES
-    # =====================================================
+    for line, machines in lines.items():       # object or dictionary reading by python
 
-    all_matched = aoi_set.intersection(spi_set, fcr_set)
+        aoi_set = set()
+        spi_set = set()
+        fcr_set = set()
 
-    all_match_count = len(all_matched)
+        for machine, barcodes in machines.items():
 
-    # =====================================================
-    # OVERALL METRICS
-    # =====================================================
+            if machine.startswith("AOI"):
+                aoi_set = barcodes
 
-    overall_total = len(aoi_set.union(spi_set, fcr_set))
+            elif machine.startswith("SPI"):
+                spi_set = barcodes
 
-    overall_percentage = (
-        round((all_match_count / overall_total) * 100, 2)
-        if overall_total else 0
-    )
+            elif machine.startswith("FCR"):
+                fcr_set = barcodes
+        # =====================================================
+        # TOTAL RECORDS
+        # =====================================================
 
-    # =====================================================
-    # COUNTS
-    # =====================================================
+        total_aoi = len(aoi_set)
+        total_spi = len(spi_set)
+        total_fcr = len(fcr_set)
 
-    aoi_spi_match_count = len(aoi_spi_matched)
-    aoi_fcr_match_count = len(aoi_fcr_matched)
-    spi_fcr_match_count = len(spi_fcr_matched)
+        # =====================================================
+        # AOI ↔ SPI
+        # =====================================================
 
-    # =====================================================
-    # STORE METRICS
-    # =====================================================
+        aoi_spi_matched = aoi_set.intersection(spi_set)
+        aoi_missing_in_spi = aoi_set - spi_set
+        spi_missing_in_aoi = spi_set - aoi_set
 
-    r.hset(
-        "reconciliation_metrics",
-        mapping={
+        # =====================================================
+        # AOI ↔ FCR
+        # =====================================================
 
-            # -------------------------
-            # Totals
-            # -------------------------
+        aoi_fcr_matched = aoi_set.intersection(fcr_set)
+        aoi_missing_in_fcr = aoi_set - fcr_set
+        fcr_missing_in_aoi = fcr_set - aoi_set
 
-            "total_aoi": total_aoi,
-            "total_spi": total_spi,
-            "total_fcr": total_fcr,
+        # =====================================================
+        # SPI ↔ FCR
+        # =====================================================
 
-            "overall_total": overall_total,
-            "overall_percentage": overall_percentage,
+        spi_fcr_matched = spi_set.intersection(fcr_set)
+        spi_missing_in_fcr = spi_set - fcr_set
+        fcr_missing_in_spi = fcr_set - spi_set
 
-            # -------------------------
-            # AOI ↔ SPI
-            # -------------------------
 
-            "aoi_spi_matched": aoi_spi_match_count,
-            "aoi_missing_in_spi": len(aoi_missing_in_spi),
-            "spi_missing_in_aoi": len(spi_missing_in_aoi),
+        # =====================================================
+        # ALL THREE MACHINES
+        # =====================================================
 
-            "aoi_spi_match_percentage":
-                round((aoi_spi_match_count / total_aoi) * 100, 2)
-                if total_aoi else 0,
+        all_matched = aoi_set.intersection(spi_set, fcr_set)
 
-            "aoi_spi_loss_percentage":
-                round((len(aoi_missing_in_spi) / total_aoi) * 100, 2)
-                if total_aoi else 0,
+        all_match_count = len(all_matched)
 
-            "spi_aoi_match_percentage":
-                round((aoi_spi_match_count / total_spi) * 100, 2)
-                if total_spi else 0,
+        # =====================================================
+        # OVERALL METRICS
+        # =====================================================
 
-            "spi_aoi_loss_percentage":
-                round((len(spi_missing_in_aoi) / total_spi) * 100, 2)
-                if total_spi else 0,
+        overall_total = len(aoi_set.union(spi_set, fcr_set))
 
-            # -------------------------
-            # AOI ↔ FCR
-            # -------------------------
+        overall_percentage = (
+            round((all_match_count / overall_total) * 100, 2)
+            if overall_total else 0
+        )
 
-            "aoi_fcr_matched": aoi_fcr_match_count,
-            "aoi_missing_in_fcr": len(aoi_missing_in_fcr),
-            "fcr_missing_in_aoi": len(fcr_missing_in_aoi),
+        # =====================================================
+        # COUNTS
+        # =====================================================
 
-            "aoi_fcr_match_percentage":
-                round((aoi_fcr_match_count / total_aoi) * 100, 2)
-                if total_aoi else 0,
+        aoi_spi_match_count = len(aoi_spi_matched)
+        aoi_fcr_match_count = len(aoi_fcr_matched)
+        spi_fcr_match_count = len(spi_fcr_matched)
 
-            "aoi_fcr_loss_percentage":
-                round((len(aoi_missing_in_fcr) / total_aoi) * 100, 2)
-                if total_aoi else 0,
+        # =====================================================
+        # STORE METRICS
+        # =====================================================
 
-            "fcr_aoi_match_percentage":
-                round((aoi_fcr_match_count / total_fcr) * 100, 2)
-                if total_fcr else 0,
+        r.hset(
+            f"metrics:{line}",
+            mapping={
 
-            "fcr_aoi_loss_percentage":
-                round((len(fcr_missing_in_aoi) / total_fcr) * 100, 2)
-                if total_fcr else 0,
+                # -------------------------
+                # Totals
+                # -------------------------
 
-            # -------------------------
-            # SPI ↔ FCR
-            # -------------------------
+                "total_aoi": total_aoi,
+                "total_spi": total_spi,
+                "total_fcr": total_fcr,
 
-            "spi_fcr_matched": spi_fcr_match_count,
-            "all_matched": all_match_count,
-            "spi_missing_in_fcr": len(spi_missing_in_fcr),
-            "fcr_missing_in_spi": len(fcr_missing_in_spi),
+                "overall_total": overall_total,
+                "overall_percentage": overall_percentage,
 
-            "spi_fcr_match_percentage":
-                round((spi_fcr_match_count / total_spi) * 100, 2)
-                if total_spi else 0,
+                # -------------------------
+                # AOI ↔ SPI
+                # -------------------------
 
-            "spi_fcr_loss_percentage":
-                round((len(spi_missing_in_fcr) / total_spi) * 100, 2)
-                if total_spi else 0,
+                "aoi_spi_matched": aoi_spi_match_count,
+                "aoi_missing_in_spi": len(aoi_missing_in_spi),
+                "spi_missing_in_aoi": len(spi_missing_in_aoi),
 
-            "fcr_spi_match_percentage":
-                round((spi_fcr_match_count / total_fcr) * 100, 2)
-                if total_fcr else 0,
+                "aoi_spi_match_percentage":
+                    round((aoi_spi_match_count / total_aoi) * 100, 2)
+                    if total_aoi else 0,
 
-            "fcr_spi_loss_percentage":
-                round((len(fcr_missing_in_spi) / total_fcr) * 100, 2)
-                if total_fcr else 0
-        }
-    )
+                "aoi_spi_loss_percentage":
+                    round((len(aoi_missing_in_spi) / total_aoi) * 100, 2)
+                    if total_aoi else 0,
+
+                "spi_aoi_match_percentage":
+                    round((aoi_spi_match_count / total_spi) * 100, 2)
+                    if total_spi else 0,
+
+                "spi_aoi_loss_percentage":
+                    round((len(spi_missing_in_aoi) / total_spi) * 100, 2)
+                    if total_spi else 0,
+
+                # -------------------------
+                # AOI ↔ FCR
+                # -------------------------
+
+                "aoi_fcr_matched": aoi_fcr_match_count,
+                "aoi_missing_in_fcr": len(aoi_missing_in_fcr),
+                "fcr_missing_in_aoi": len(fcr_missing_in_aoi),
+
+                "aoi_fcr_match_percentage":
+                    round((aoi_fcr_match_count / total_aoi) * 100, 2)
+                    if total_aoi else 0,
+
+                "aoi_fcr_loss_percentage":
+                    round((len(aoi_missing_in_fcr) / total_aoi) * 100, 2)
+                    if total_aoi else 0,
+
+                "fcr_aoi_match_percentage":
+                    round((aoi_fcr_match_count / total_fcr) * 100, 2)
+                    if total_fcr else 0,
+
+                "fcr_aoi_loss_percentage":
+                    round((len(fcr_missing_in_aoi) / total_fcr) * 100, 2)
+                    if total_fcr else 0,
+
+                # -------------------------
+                # SPI ↔ FCR
+                # -------------------------
+
+                "spi_fcr_matched": spi_fcr_match_count,
+                "all_matched": all_match_count,
+                "spi_missing_in_fcr": len(spi_missing_in_fcr),
+                "fcr_missing_in_spi": len(fcr_missing_in_spi),
+
+                "spi_fcr_match_percentage":
+                    round((spi_fcr_match_count / total_spi) * 100, 2)
+                    if total_spi else 0,
+
+                "spi_fcr_loss_percentage":
+                    round((len(spi_missing_in_fcr) / total_spi) * 100, 2)
+                    if total_spi else 0,
+
+                "fcr_spi_match_percentage":
+                    round((spi_fcr_match_count / total_fcr) * 100, 2)
+                    if total_fcr else 0,
+
+                "fcr_spi_loss_percentage":
+                    round((len(fcr_missing_in_spi) / total_fcr) * 100, 2)
+                    if total_fcr else 0
+            }
+        )
+
+
+        print("\n============================")
+        print(f"Processing {line}")
+        print("============================")
+
+        for machine, barcodes in machines.items():
+            print(f"{machine} -> {len(barcodes)} records")
+
+
 # =====================================================
 # AOI KAFKA SOURCE
 # =====================================================
@@ -208,7 +269,7 @@ def update_metrics(r):
 aoi_source = (
     KafkaSource.builder()
     .set_bootstrap_servers("kafka:9092")
-    .set_topics("aoi-topic")
+    .set_topics(*topics["AOI"])
     .set_group_id("aoi-group")
     .set_starting_offsets(KafkaOffsetsInitializer.earliest())
     .set_value_only_deserializer(SimpleStringSchema())
@@ -222,7 +283,7 @@ aoi_source = (
 spi_source = (
     KafkaSource.builder()
     .set_bootstrap_servers("kafka:9092")
-    .set_topics("spi-topic")
+    .set_topics(*topics["SPI"])
     .set_group_id("spi-group")
     .set_starting_offsets(KafkaOffsetsInitializer.earliest())
     .set_value_only_deserializer(SimpleStringSchema())
@@ -237,7 +298,7 @@ spi_source = (
 fcr_source = (
     KafkaSource.builder()
     .set_bootstrap_servers("kafka:9092")
-    .set_topics("fcr-topic")
+    .set_topics(*topics["FCR"])
     .set_group_id("fcr-group")
     .set_starting_offsets(KafkaOffsetsInitializer.earliest())
     .set_value_only_deserializer(SimpleStringSchema())
@@ -287,12 +348,10 @@ def process_aoi(record):
             decode_responses=True
         )
 
-        added = r.sadd(
-            "aoi_barcodes",
-            barcode
-        )
+        save_barcode(r, data)
 
         update_metrics(r)
+
 
         # print(
         #     f"AOI Processed | Barcode={barcode} | Added={added}"
@@ -329,10 +388,7 @@ def process_spi(record):
             decode_responses=True
         )
 
-        added = r.sadd(
-            "spi_barcodes",
-            barcode
-        )
+        save_barcode(r, data)
 
         update_metrics(r)
 
@@ -371,10 +427,7 @@ def process_fcr(record):
             decode_responses=True
         )
 
-        r.sadd(
-            "fcr_barcodes",
-            barcode
-        )
+        save_barcode(r, data)
 
         update_metrics(r)
 

@@ -1,0 +1,20 @@
+flink-jobmanager:
+  build:
+    context: .
+    dockerfile: flink/Dockerfile.flink
+
+  container_name: flink-jobmanager
+
+  command: jobmanager
+
+  ports:
+    - "8081:8081"
+
+  environment:
+    JOB_MANAGER_RPC_ADDRESS: flink-jobmanager
+
+  volumes:
+    - ./flink/flink-conf.dev.yaml:/opt/flink/conf/flink-conf.yaml
+    - ./flink-jobs:/opt/flink/jobs
+    - ./flink-lib/flink-connector-kafka-3.0.2-1.18.jar:/opt/flink/lib/flink-connector-kafka-3.0.2-1.18.jar
+    - ./flink-lib/kafka-clients-3.5.1.jar:/opt/flink/lib/kafka-clients-3.5.1.jar

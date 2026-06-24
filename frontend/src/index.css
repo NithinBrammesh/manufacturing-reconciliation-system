@@ -1,0 +1,35 @@
+/* ===== RESET ===== */
+
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+    width: 100%;
+    min-height: 100%;
+}
+
+body {
+    background: #f4f7fc;
+    color: #1e293b;
+    font-family: Inter, "Segoe UI", sans-serif;
+    overflow-x: hidden;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+button {
+    border: none;
+    background: none;
+    font: inherit;
+    cursor: pointer;
+}

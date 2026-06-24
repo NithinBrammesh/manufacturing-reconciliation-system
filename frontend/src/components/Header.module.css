@@ -1,0 +1,191 @@
+.header {
+    width: 98%;
+    height: 90px;
+
+    background: #ffffff;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    padding: 10px;
+    border-bottom: 1px solid #e5e7eb;
+
+    box-shadow: 0 5px 18px rgba(0,0,0,.06);
+}
+
+/* LEFT */
+
+.leftSection{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:20px;
+
+}
+
+.logoContainer{
+
+    width:62px;
+
+    height:62px;
+
+    border-radius:16px;
+
+    background:linear-gradient(135deg,#2563eb,#3b82f6);
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    color:white;
+
+    font-size:30px;
+
+    box-shadow:0 8px 20px rgba(37,99,235,.30);
+
+}
+
+.leftSection h1{
+
+    font-size:28px;
+
+    color:#0f172a;
+
+    font-weight:700;
+
+}
+
+.leftSection p{
+
+    margin-top:5px;
+
+    color:#64748b;
+
+    font-size:15px;
+
+}
+
+/* RIGHT */
+
+.rightSection{
+
+    display:flex;
+
+    gap:18px;
+
+}
+
+.statusCard{
+
+    min-width:210px;
+
+    padding:14px 20px;
+
+    background:#f8fafc;
+
+    border:1px solid #e2e8f0;
+
+    border-radius:14px;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:15px;
+
+    transition:.3s;
+
+}
+
+.statusCard:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:0 10px 25px rgba(0,0,0,.08);
+
+}
+
+.statusCard svg{
+
+    font-size:28px;
+
+    color:#2563eb;
+
+}
+
+.statusCard span{
+
+    color:#64748b;
+
+    font-size:13px;
+
+}
+
+.statusCard h4{
+
+    margin-top:3px;
+
+    color:#0f172a;
+
+    font-size:16px;
+
+    font-weight:600;
+
+}
+
+/* Responsive */
+
+@media(max-width:1200px){
+
+.header{
+
+    flex-direction:column;
+
+    height:auto;
+
+    padding:20px;
+
+    gap:20px;
+
+}
+
+.rightSection{
+
+    width:100%;
+
+    justify-content:center;
+
+    flex-wrap:wrap;
+
+}
+
+}
+
+@media(max-width:768px){
+
+.leftSection{
+
+    flex-direction:column;
+
+    text-align:center;
+
+}
+
+.statusCard{
+
+    width:100%;
+
+}
+
+.rightSection{
+
+    flex-direction:column;
+
+}
+
+}

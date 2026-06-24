@@ -26,6 +26,30 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_HEAP_OPTS: "-Xms128m -Xmx256m"
 
+  kafka-init:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka-init
+    depends_on:
+      - kafka
+    command: >
+      bash -c "
+        echo 'Waiting for Kafka to be ready...' &&
+        until kafka-topics --bootstrap-server kafka:9092 --list > /dev/null 2>&1; do
+          echo 'Kafka not ready, waiting...'
+          sleep 3
+        done &&
+        echo 'Creating topics...' &&
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic aoi1-topic --partitions 1 --replication-factor 1 &&
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic spi1-topic --partitions 1 --replication-factor 1 &&
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic aoi2-topic --partitions 1 --replication-factor 1 &&
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic spi2-topic --partitions 1 --replication-factor 1 &&
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic fcr2-topic --partitions 1 --replication-factor 1 &&
+
+        echo 'All topics created successfully.' &&
+        kafka-topics --bootstrap-server kafka:9092 --list
+      "
+    restart: "no"
+
   redis:
     image: redis:7-alpine
     container_name: redis
@@ -43,8 +67,8 @@ services:
       - "8081:8081"
     environment:
       JOB_MANAGER_RPC_ADDRESS: flink-jobmanager
-      FLINK_ENV_JAVA_OPTS: "-Xms128m -Xmx256m"
     volumes:
+      - ./flink/flink-conf.dev.yaml:/opt/flink/conf/flink-conf.yaml
       - ./flink-jobs:/opt/flink/jobs
       - ./flink-lib/flink-connector-kafka-3.0.2-1.18.jar:/opt/flink/lib/flink-connector-kafka-3.0.2-1.18.jar
       - ./flink-lib/kafka-clients-3.5.1.jar:/opt/flink/lib/kafka-clients-3.5.1.jar
@@ -60,11 +84,44 @@ services:
     environment:
       JOB_MANAGER_RPC_ADDRESS: flink-jobmanager
       TASK_MANAGER_NUMBER_OF_TASK_SLOTS: 2
-      FLINK_ENV_JAVA_OPTS: "-Xms256m -Xmx512m"
+    volumes:
+      - ./flink/flink-conf.dev.yaml:/opt/flink/conf/flink-conf.yaml
+      - ./flink-jobs:/opt/flink/jobs
+      - ./flink-lib/flink-connector-kafka-3.0.2-1.18.jar:/opt/flink/lib/flink-connector-kafka-3.0.2-1.18.jar
+      - ./flink-lib/kafka-clients-3.5.1.jar:/opt/flink/lib/kafka-clients-3.5.1.jar
+
+
+  flink-job-submitter:
+    image: manufacturing-reconciliation-system-flink-jobmanager
+    container_name: flink-job-submitter
+    depends_on:
+      - flink-jobmanager
+      - flink-taskmanager
+      - kafka-init
+      - redis
+    command: >
+      bash -c "
+        echo 'Waiting for JobManager to be ready...' &&
+        until curl -sf http://flink-jobmanager:8081/overview | grep -q 'taskmanagers'; do
+          echo 'JobManager not ready, retrying in 5s...'
+          sleep 5
+        done &&
+        echo 'Waiting for TaskManager to register...' &&
+        until curl -sf http://flink-jobmanager:8081/overview | grep -v '\"taskmanagers\":0' | grep -q 'taskmanagers'; do
+          echo 'No TaskManagers yet, retrying in 5s...'
+          sleep 5
+        done &&
+        echo 'Giving Kafka topics 15 seconds to be fully ready...' &&
+        sleep 15 &&
+        echo 'All systems ready. Submitting PyFlink job...' &&
+        flink run -m flink-jobmanager:8081 -py /opt/flink/jobs/pyflink_reconciliation.py &&
+        echo 'Job submitted successfully!'
+      "
     volumes:
       - ./flink-jobs:/opt/flink/jobs
       - ./flink-lib/flink-connector-kafka-3.0.2-1.18.jar:/opt/flink/lib/flink-connector-kafka-3.0.2-1.18.jar
       - ./flink-lib/kafka-clients-3.5.1.jar:/opt/flink/lib/kafka-clients-3.5.1.jar
+    restart: "no"
 
   flask-api:
     image: python:3.11-slim

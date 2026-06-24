@@ -1,0 +1,37 @@
+################################################################################
+# Production Configuration
+################################################################################
+
+jobmanager.rpc.address: flink-jobmanager
+jobmanager.rpc.port: 6123
+
+jobmanager.bind-host: 0.0.0.0
+taskmanager.bind-host: 0.0.0.0
+
+rest.address: 0.0.0.0
+rest.bind-address: 0.0.0.0
+
+blob.server.port: 6124
+query.server.port: 6125
+
+####################################################
+# Memory
+####################################################
+
+jobmanager.memory.process.size: 2048m
+
+taskmanager.memory.process.size: 4096m
+
+####################################################
+# Parallelism
+####################################################
+
+taskmanager.numberOfTaskSlots: 4
+
+parallelism.default: 4
+
+####################################################
+# Failover
+####################################################
+
+jobmanager.execution.failover-strategy: region
