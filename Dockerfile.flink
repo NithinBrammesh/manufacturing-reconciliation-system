@@ -5,9 +5,8 @@ USER root
 RUN apt-get update && \
     apt-get install -y python3 python3-pip && \
     ln -sf /usr/bin/python3 /usr/bin/python && \
-    pip3 install --no-cache-dir apache-flink==1.18.1 redis
+    pip3 install --no-cache-dir apache-flink==1.18.1 redis python-dotenv
 
-# Copy our custom Flink configuration
 COPY flink/flink-conf.dev.yaml /opt/flink/conf/flink-conf.yaml
 
 USER flink

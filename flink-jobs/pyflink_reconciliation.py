@@ -1,6 +1,7 @@
 import json
 import redis
-from config.load_config import topics
+from load_config import topics
+
 from pyflink.datastream import StreamExecutionEnvironment
 from pyflink.common.serialization import SimpleStringSchema
 from pyflink.common.watermark_strategy import WatermarkStrategy
@@ -17,23 +18,19 @@ env = StreamExecutionEnvironment.get_execution_environment()
 env.set_parallelism(1)
 
 # =====================================================
-# REDIS CONNECTION
+# CLEAR REDIS ON STARTUP ONLY
+# Create, use, close — never stored at module level
 # =====================================================
 
-startup_redis = redis.Redis(
-    host="redis",
-    port=6379,
-    decode_responses=True
-)
+_r = redis.Redis(host="redis", port=6379, decode_responses=True)
 
-# Uncomment if you want fresh metrics every restart
+for key in _r.scan_iter("metrics:*"):
+    _r.delete(key)
 
-for key in startup_redis.keys("metrics:*"):
-    startup_redis.delete(key)
+for key in _r.scan_iter("line:*"):
+    _r.delete(key)
 
-for key in startup_redis.keys("line:*"):
-    startup_redis.delete(key)
-
+_r.close()
 
 print("Redis reconciliation data cleared")
 
@@ -45,19 +42,14 @@ print("Redis reconciliation data cleared")
 def save_barcode(r, data):
 
     line = data.get("line")
-
     machine = data.get("machine")
-
     barcode = data.get("barcode")
 
     if not line or not machine or not barcode:
-
         return False
 
     redis_key = f"line:{line}:{machine}"
-
     r.sadd(redis_key, barcode)
-
     return True
 
 
@@ -65,40 +57,30 @@ def save_barcode(r, data):
 # METRICS CALCULATION
 # =====================================================
 
-
-def update_metrics(r):
-
-    # Fetch all machine keys
-    line_keys = r.keys("line:*")
+def update_metrics(r, line):
 
     lines = {}
 
-    for key in line_keys:
+    for key in r.scan_iter(f"line:{line}:*"):
+        _, line_name, machine = key.split(":")
+        if line_name not in lines:
+            lines[line_name] = {}
+        lines[line_name][machine] = set(r.smembers(key))
 
-        _, line, machine = key.split(":")
-
-        if line not in lines:
-            lines[line] = {}
-
-        lines[line][machine] = set(r.smembers(key))
-
-
-    for line, machines in lines.items():       # object or dictionary reading by python
+    for line, machines in lines.items():
 
         aoi_set = set()
         spi_set = set()
         fcr_set = set()
 
         for machine, barcodes in machines.items():
-
             if machine.startswith("AOI"):
                 aoi_set = barcodes
-
             elif machine.startswith("SPI"):
                 spi_set = barcodes
-
             elif machine.startswith("FCR"):
                 fcr_set = barcodes
+
         # =====================================================
         # TOTAL RECORDS
         # =====================================================
@@ -131,13 +113,11 @@ def update_metrics(r):
         spi_missing_in_fcr = spi_set - fcr_set
         fcr_missing_in_spi = fcr_set - spi_set
 
-
         # =====================================================
         # ALL THREE MACHINES
         # =====================================================
 
         all_matched = aoi_set.intersection(spi_set, fcr_set)
-
         all_match_count = len(all_matched)
 
         # =====================================================
@@ -167,21 +147,14 @@ def update_metrics(r):
             f"metrics:{line}",
             mapping={
 
-                # -------------------------
                 # Totals
-                # -------------------------
-
                 "total_aoi": total_aoi,
                 "total_spi": total_spi,
                 "total_fcr": total_fcr,
-
                 "overall_total": overall_total,
                 "overall_percentage": overall_percentage,
 
-                # -------------------------
                 # AOI ↔ SPI
-                # -------------------------
-
                 "aoi_spi_matched": aoi_spi_match_count,
                 "aoi_missing_in_spi": len(aoi_missing_in_spi),
                 "spi_missing_in_aoi": len(spi_missing_in_aoi),
@@ -202,10 +175,7 @@ def update_metrics(r):
                     round((len(spi_missing_in_aoi) / total_spi) * 100, 2)
                     if total_spi else 0,
 
-                # -------------------------
                 # AOI ↔ FCR
-                # -------------------------
-
                 "aoi_fcr_matched": aoi_fcr_match_count,
                 "aoi_missing_in_fcr": len(aoi_missing_in_fcr),
                 "fcr_missing_in_aoi": len(fcr_missing_in_aoi),
@@ -226,10 +196,7 @@ def update_metrics(r):
                     round((len(fcr_missing_in_aoi) / total_fcr) * 100, 2)
                     if total_fcr else 0,
 
-                # -------------------------
                 # SPI ↔ FCR
-                # -------------------------
-
                 "spi_fcr_matched": spi_fcr_match_count,
                 "all_matched": all_match_count,
                 "spi_missing_in_fcr": len(spi_missing_in_fcr),
@@ -253,7 +220,6 @@ def update_metrics(r):
             }
         )
 
-
         print("\n============================")
         print(f"Processing {line}")
         print("============================")
@@ -263,7 +229,7 @@ def update_metrics(r):
 
 
 # =====================================================
-# AOI KAFKA SOURCE
+# KAFKA SOURCES
 # =====================================================
 
 aoi_source = (
@@ -276,10 +242,6 @@ aoi_source = (
     .build()
 )
 
-# =====================================================
-# SPI KAFKA SOURCE
-# =====================================================
-
 spi_source = (
     KafkaSource.builder()
     .set_bootstrap_servers("kafka:9092")
@@ -289,11 +251,6 @@ spi_source = (
     .set_value_only_deserializer(SimpleStringSchema())
     .build()
 )
-
-
-# =====================================================
-# FCR KAFKA SOURCE
-# =====================================================
 
 fcr_source = (
     KafkaSource.builder()
@@ -309,156 +266,77 @@ fcr_source = (
 # CREATE STREAMS
 # =====================================================
 
-aoi_stream = env.from_source(
-    aoi_source,
-    WatermarkStrategy.no_watermarks(),
-    "AOI Source"
-)
+aoi_stream = env.from_source(aoi_source, WatermarkStrategy.no_watermarks(), "AOI Source")
+spi_stream = env.from_source(spi_source, WatermarkStrategy.no_watermarks(), "SPI Source")
+fcr_stream = env.from_source(fcr_source, WatermarkStrategy.no_watermarks(), "FCR Source")
 
-spi_stream = env.from_source(
-    spi_source,
-    WatermarkStrategy.no_watermarks(),
-    "SPI Source"
-)
-
-fcr_stream = env.from_source(
-    fcr_source,
-    WatermarkStrategy.no_watermarks(),
-    "FCR Source"
-)
 
 # =====================================================
-# AOI PROCESSOR
+# PROCESSORS
+# Redis is created INSIDE each function so PyFlink
+# never tries to pickle the connection object
 # =====================================================
 
 def process_aoi(record):
-
+    r = redis.Redis(host="redis", port=6379, decode_responses=True)
     try:
-
         data = json.loads(record)
-
-        barcode = data.get("barcode")
-
-        if not barcode:
+        if not data.get("barcode"):
             return record
-
-        r = redis.Redis(
-            host="redis",
-            port=6379,
-            decode_responses=True
-        )
-
         save_barcode(r, data)
-
-        update_metrics(r)
-
-
-        # print(
-        #     f"AOI Processed | Barcode={barcode} | Added={added}"
-        # )
-
+        update_metrics(r, data["line"])
         return record
-
     except Exception as e:
-
-        print(
-            f"AOI ERROR : {str(e)}"
-        )
-
+        print(f"AOI ERROR: {e}")
         return record
+    finally:
+        r.close()
 
-# =====================================================
-# SPI PROCESSOR
-# =====================================================
 
 def process_spi(record):
-
+    r = redis.Redis(host="redis", port=6379, decode_responses=True)
     try:
-
         data = json.loads(record)
-
-        barcode = data.get("barcode")
-
-        if not barcode:
+        if not data.get("barcode"):
             return record
-
-        r = redis.Redis(
-            host="redis",
-            port=6379,
-            decode_responses=True
-        )
-
         save_barcode(r, data)
-
-        update_metrics(r)
-
-        # print(
-        #     f"SPI Processed | Barcode={barcode} | Added={added}"
-        # )
-
+        update_metrics(r, data["line"])
         return record
-
     except Exception as e:
-
-        print(
-            f"SPI ERROR : {str(e)}"
-        )
-
+        print(f"SPI ERROR: {e}")
         return record
+    finally:
+        r.close()
 
-# =====================================================
-# FCR PROCESSOR
-# =====================================================        
 
 def process_fcr(record):
-
+    r = redis.Redis(host="redis", port=6379, decode_responses=True)
     try:
-
         data = json.loads(record)
-
-        barcode = data.get("barcode")
-
-        if not barcode:
+        if not data.get("barcode"):
             return record
-
-        r = redis.Redis(
-            host="redis",
-            port=6379,
-            decode_responses=True
-        )
-
         save_barcode(r, data)
-
-        update_metrics(r)
-
+        update_metrics(r, data["line"])
         return record
-
     except Exception as e:
-
-        print(f"FCR ERROR : {str(e)}")
-
+        print(f"FCR ERROR: {e}")
         return record
+    finally:
+        r.close()
+
 
 # =====================================================
 # EXECUTION
 # =====================================================
 
 processed_aoi = aoi_stream.map(process_aoi)
-
 processed_spi = spi_stream.map(process_spi)
-
 processed_fcr = fcr_stream.map(process_fcr)
 
-# Required sinks
-
 processed_aoi.print()
-
-processed_fcr.print()
-
 processed_spi.print()
+processed_fcr.print()
 
 print("Flink Reconciliation Started")
 
-env.execute(
-    "Manufacturing-Reconciliation"
-)
+env.execute("Manufacturing-Reconciliation")

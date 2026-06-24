@@ -55,8 +55,8 @@
         "transactiontimeout": 60000,
         "metadatamaxage": 300000,
         "allowautotopiccreation": false,
-        "x": 920,
-        "y": 400,
+        "x": 960,
+        "y": 360,
         "wires": []
     },
     {
@@ -64,8 +64,8 @@
         "type": "function",
         "z": "9d4db24319f4b0b7",
         "name": "function 1",
-        "func": "var lines = msg.payload.split('\\n');\nvar data = {};\n\nlines.forEach(function (line) {\n    line = line.trim();\n    if (line) {\n        var idx = line.indexOf(',');\n        if (idx !== -1) {\n            var key = line.substring(0, idx).trim();\n            var value = line.substring(idx + 1).trim().replace(/\"/g, '');\n            data[key] = value;\n        }\n    }\n});\n\nmsg.payload = JSON.stringify({\n    barcode: data[\"Barcode\"],\n    result: data[\"Result\"],\n    panelId: data[\"Panel ID\"],\n    programName: data[\"Program Name\"],\n\n    machine: \"AOI3D1\",\n    line: \"LINE1\",\n    sourceType: \"AOI\",\n\n    timestamp: data[\"Test End Time\"]\n});\n\nreturn msg;\n",
-        "outputs": 1,
+        "func": "// Save file information before changing msg.payload\nvar savedFileOnly = msg.fileOnly;\nvar savedFilename = msg.filename;\n\n// Parse CSV\nvar lines = msg.payload.split('\\n');\nvar data = {};\n\nlines.forEach(function (line) {\n    line = line.trim();\n\n    if (line) {\n        var idx = line.indexOf(',');\n\n        if (idx !== -1) {\n            var key = line.substring(0, idx).trim();\n            var value = line.substring(idx + 1).trim().replace(/\"/g, '');\n\n            data[key] = value;\n        }\n    }\n});\n\n// ---------- Output 1 : Kafka ----------\nvar kafkaMsg = {\n    payload: JSON.stringify({\n        barcode: data[\"Barcode\"],\n        result: data[\"Result\"],\n        panelId: data[\"Panel ID\"],\n        programName: data[\"Program Name\"],\n\n        machine: \"AOI3D1\",\n        line: \"LINE1\",\n        sourceType: \"AOI\",\n\n        timestamp: data[\"Test End Time\"]\n    })\n};\n\n// ---------- Output 2 : Redis Mark Processed ----------\nvar redisMsg = {\n    payload: savedFileOnly,\n    fileOnly: savedFileOnly,\n    filename: savedFilename\n};\n\nreturn [kafkaMsg, redisMsg];",
+        "outputs": 2,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
@@ -77,6 +77,9 @@
             [
                 "e9b0333bc3dc422f",
                 "b6959c9e8b2949bb"
+            ],
+            [
+                "ebfcd2e6b82966e4"
             ]
         ]
     },
@@ -114,7 +117,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 940,
-        "y": 320,
+        "y": 280,
         "wires": []
     },
     {
@@ -130,7 +133,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 760,
-        "y": 280,
+        "y": 260,
         "wires": []
     },
     {
@@ -698,8 +701,8 @@
         "type": "function",
         "z": "9d4db24319f4b0b7",
         "name": "function 6",
-        "func": "var lines = msg.payload.split('\\n');\nvar boardData = null;\nvar headers = null;\n\nfor (var i = 0; i < lines.length; i++) {\n    var line = lines[i].trim();\n    if (line === 'Board') {\n        // Next line is headers, line after is data\n        headers = lines[i + 1].trim().split(',');\n        var values = lines[i + 2] ? lines[i + 2].trim().split(',') : [];\n        if (values.length > 0) {\n            boardData = {};\n            headers.forEach(function (h, idx) {\n                boardData[h.trim()] = values[idx] ? values[idx].trim() : '';\n            });\n        }\n        break;\n    }\n}\n\nif (!boardData) {\n    return null; // skip if no board data\n}\n\nmsg.payload = JSON.stringify({\n\n    barcode: boardData[\"MasterBarcode\"],\n\n    inspectionDateTime:\n        boardData[\"InspectionDateTime\"],\n\n    result:\n        boardData[\"PCBResult\"],\n\n    side:\n        boardData[\"Side\"],\n\n    machine: \"SPI1\",\n\n    line: \"LINE1\",\n\n    sourceType: \"SPI\",\n\n    timestamp:\n        boardData[\"InspectionDateTime\"]\n\n});\n\nreturn msg;",
-        "outputs": 1,
+        "func": "// Save filename before changing msg.payload\nvar savedFileOnly = msg.fileOnly;\nvar savedFilename = msg.filename;\n\n// Parse SPI CSV\nvar lines = msg.payload.split('\\n');\nvar boardData = null;\nvar headers = null;\n\nfor (var i = 0; i < lines.length; i++) {\n\n    var line = lines[i].trim();\n\n    if (line === \"Board\") {\n\n        headers = lines[i + 1].trim().split(\",\");\n\n        var values = lines[i + 2]\n            ? lines[i + 2].trim().split(\",\")\n            : [];\n\n        if (values.length > 0) {\n\n            boardData = {};\n\n            headers.forEach(function (h, idx) {\n\n                boardData[h.trim()] =\n                    values[idx]\n                        ? values[idx].trim()\n                        : \"\";\n\n            });\n\n        }\n\n        break;\n    }\n}\n\nif (!boardData) {\n    return null;\n}\n\n// --------------------\n// Output 1 -> Kafka\n// --------------------\n\nvar msg1 = {\n    payload: JSON.stringify({\n\n        barcode: boardData[\"MasterBarcode\"],\n\n        inspectionDateTime:\n            boardData[\"InspectionDateTime\"],\n\n        result:\n            boardData[\"PCBResult\"],\n\n        side:\n            boardData[\"Side\"],\n\n        machine: \"SPI1\",\n\n        line: \"LINE1\",\n\n        sourceType: \"SPI\",\n\n        timestamp:\n            boardData[\"InspectionDateTime\"]\n\n    })\n};\n\n// --------------------\n// Output 2 -> Redis\n// --------------------\n\nvar msg2 = {\n\n    payload: savedFileOnly,\n\n    fileOnly: savedFileOnly,\n\n    filename: savedFilename\n\n};\n\nreturn [msg1, msg2];",
+        "outputs": 2,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
@@ -711,6 +714,9 @@
             [
                 "b9ccdf26accbd018",
                 "de0e797dcab71335"
+            ],
+            [
+                "4f352f8771778f97"
             ]
         ]
     },
@@ -747,8 +753,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 940,
-        "y": 1320,
+        "x": 960,
+        "y": 1280,
         "wires": []
     },
     {
@@ -764,7 +770,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 760,
-        "y": 1280,
+        "y": 1260,
         "wires": []
     },
     {
@@ -959,8 +965,8 @@
         "transactiontimeout": 60000,
         "metadatamaxage": 300000,
         "allowautotopiccreation": false,
-        "x": 940,
-        "y": 1400,
+        "x": 960,
+        "y": 1360,
         "wires": []
     },
     {
@@ -1293,7 +1299,7 @@
         "z": "9d4db24319f4b0b7",
         "name": "function 8",
         "func": "var savedFileOnly = msg.fileOnly;\nvar savedFilename = msg.filename;\n\nvar lines = msg.payload.split('\\n');\nvar data = {};\n\nlines.forEach(function (line) {\n    line = line.trim();\n\n    if (line) {\n\n        var idx = line.indexOf(',');\n\n        if (idx !== -1) {\n\n            var key = line.substring(0, idx).trim();\n\n            var value = line.substring(idx + 1)\n                .trim()\n                .replace(/\"/g, '');\n\n            data[key] = value;\n        }\n    }\n});\n\nvar jsonPayload = JSON.stringify({\n\n    barcode: data[\"Barcode\"],\n\n    result: data[\"Result\"],\n\n    panelId: data[\"Panel ID\"],\n\n    programName: data[\"Program Name\"],\n\n    machine: \"AOI2\",\n\n    line: \"LINE2\",\n\n    sourceType: \"AOI\",\n\n    timestamp: data[\"Test End Time\"]\n\n});\n\nvar msg1 = {\n    payload: jsonPayload\n};\n\nvar msg2 = {\n    payload: savedFileOnly,\n    fileOnly: savedFileOnly,\n    filename: savedFilename\n};\n\nreturn [msg1, msg2];",
-        "outputs": 1,
+        "outputs": 2,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
@@ -1305,6 +1311,9 @@
             [
                 "f087f6dc45253faa",
                 "1442405ab5a09ce0"
+            ],
+            [
+                "e44399fac97dbbaa"
             ]
         ]
     },
@@ -1342,7 +1351,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 960,
-        "y": 2360,
+        "y": 2300,
         "wires": []
     },
     {
@@ -1357,8 +1366,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 780,
-        "y": 2320,
+        "x": 760,
+        "y": 2300,
         "wires": []
     },
     {
@@ -1554,7 +1563,7 @@
         "metadatamaxage": 300000,
         "allowautotopiccreation": false,
         "x": 960,
-        "y": 2440,
+        "y": 2380,
         "wires": []
     },
     {
@@ -1909,8 +1918,8 @@
         "type": "function",
         "z": "9d4db24319f4b0b7",
         "name": "function 12",
-        "func": "var lines = msg.payload.split('\\n');\nvar boardData = null;\nvar headers = null;\n\nfor (var i = 0; i < lines.length; i++) {\n\n    var line = lines[i].trim();\n\n    if (line === 'Board') {\n\n        headers = lines[i + 1].trim().split(',');\n\n        var values = lines[i + 2]\n            ? lines[i + 2].trim().split(',')\n            : [];\n\n        if (values.length > 0) {\n\n            boardData = {};\n\n            headers.forEach(function (h, idx) {\n\n                boardData[h.trim()] =\n                    values[idx]\n                        ? values[idx].trim()\n                        : '';\n\n            });\n\n        }\n\n        break;\n    }\n}\n\nif (!boardData) {\n    return null;\n}\n\nmsg.payload = JSON.stringify({\n\n    barcode: boardData[\"MasterBarcode\"],\n\n    inspectionDateTime:\n        boardData[\"InspectionDateTime\"],\n\n    result:\n        boardData[\"PCBResult\"],\n\n    side:\n        boardData[\"Side\"],\n\n    machine: \"SPI2\",\n\n    line: \"LINE2\",\n\n    sourceType: \"SPI\",\n\n    timestamp:\n        boardData[\"InspectionDateTime\"]\n\n});\n\nreturn msg;",
-        "outputs": 1,
+        "func": "var savedFileOnly = msg.fileOnly;\nvar savedFilename = msg.filename;\n\nvar lines = msg.payload.split('\\n');\nvar boardData = null;\nvar headers = null;\n\nfor (var i = 0; i < lines.length; i++) {\n\n    var line = lines[i].trim();\n\n    if (line === 'Board') {\n\n        headers = lines[i + 1].trim().split(',');\n\n        var values = lines[i + 2]\n            ? lines[i + 2].trim().split(',')\n            : [];\n\n        if (values.length > 0) {\n\n            boardData = {};\n\n            headers.forEach(function (h, idx) {\n\n                boardData[h.trim()] =\n                    values[idx]\n                        ? values[idx].trim()\n                        : '';\n\n            });\n\n        }\n\n        break;\n    }\n}\n\nif (!boardData) {\n    return null;\n}\n\nvar jsonPayload = JSON.stringify({\n\n    barcode: boardData[\"MasterBarcode\"],\n\n    inspectionDateTime:\n        boardData[\"InspectionDateTime\"],\n\n    result:\n        boardData[\"PCBResult\"],\n\n    side:\n        boardData[\"Side\"],\n\n    machine: \"SPI2\",\n\n    line: \"LINE2\",\n\n    sourceType: \"SPI\",\n\n    timestamp:\n        boardData[\"InspectionDateTime\"]\n\n});\n\nvar msg1 = {\n    payload: jsonPayload\n};\n\nvar msg2 = {\n    payload: savedFileOnly,\n    fileOnly: savedFileOnly,\n    filename: savedFilename\n};\n\nreturn [msg1, msg2];",
+        "outputs": 2,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
@@ -1922,6 +1931,9 @@
             [
                 "ca43f73374e954fb",
                 "8cfdd88c8b14a86a"
+            ],
+            [
+                "9c3c5fba01731928"
             ]
         ]
     },
@@ -1958,8 +1970,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 960,
-        "y": 3280,
+        "x": 980,
+        "y": 3240,
         "wires": []
     },
     {
@@ -1974,8 +1986,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 780,
-        "y": 3240,
+        "x": 760,
+        "y": 3220,
         "wires": []
     },
     {
@@ -2170,8 +2182,8 @@
         "transactiontimeout": 60000,
         "metadatamaxage": 300000,
         "allowautotopiccreation": false,
-        "x": 960,
-        "y": 3360,
+        "x": 980,
+        "y": 3320,
         "wires": []
     },
     {
@@ -2525,8 +2537,8 @@
         "type": "function",
         "z": "9d4db24319f4b0b7",
         "name": "function 16",
-        "func": "var savedFileOnly = msg.fileOnly;\nvar savedFilename = msg.filename;\n\nvar lines = msg.payload.split('\\n');\nvar data = {};\n\nlines.forEach(function (line) {\n\n    line = line.trim();\n\n    if (line) {\n\n        var idx = line.indexOf(',');\n\n        if (idx !== -1) {\n\n            var key = line.substring(0, idx).trim();\n\n            var value = line.substring(idx + 1)\n                .trim()\n                .replace(/\"/g, '');\n\n            data[key] = value;\n        }\n    }\n});\n\nmsg.payload = JSON.stringify({\n\n    barcode: data[\"Barcode\"],\n\n    result: data[\"Result\"],\n\n    panelId: data[\"Panel ID\"],\n\n    programName: data[\"Program Name\"],\n\n    machine: \"FCR2\",\n\n    line: \"LINE2\",\n\n    sourceType: \"FCR\",\n\n    timestamp: data[\"Test End Time\"]\n\n});\n\nreturn msg;",
-        "outputs": 1,
+        "func": "var savedFileOnly = msg.fileOnly;\nvar savedFilename = msg.filename;\n\nvar lines = msg.payload.split('\\n');\nvar data = {};\n\nlines.forEach(function (line) {\n\n    line = line.trim();\n\n    if (line) {\n\n        var idx = line.indexOf(',');\n\n        if (idx !== -1) {\n\n            var key = line.substring(0, idx).trim();\n\n            var value = line.substring(idx + 1)\n                .trim()\n                .replace(/\"/g, '');\n\n            data[key] = value;\n        }\n    }\n});\n\nvar jsonPayload = JSON.stringify({\n\n    barcode: data[\"Barcode\"],\n\n    result: data[\"Result\"],\n\n    panelId: data[\"Panel ID\"],\n\n    programName: data[\"Program Name\"],\n\n    machine: \"FCR2\",\n\n    line: \"LINE2\",\n\n    sourceType: \"FCR\",\n\n    timestamp: data[\"Test End Time\"]\n\n});\n\nvar msg1 = {\n    payload: jsonPayload\n};\n\nvar msg2 = {\n    payload: savedFileOnly,\n    fileOnly: savedFileOnly,\n    filename: savedFilename\n};\n\nreturn [msg1, msg2];",
+        "outputs": 2,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
@@ -2538,6 +2550,9 @@
             [
                 "6d21933d61884e6b",
                 "4b2bd20a86b30d02"
+            ],
+            [
+                "83841b855be0a724"
             ]
         ]
     },
@@ -2574,8 +2589,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 980,
-        "y": 4260,
+        "x": 1000,
+        "y": 4220,
         "wires": []
     },
     {
@@ -2786,8 +2801,8 @@
         "transactiontimeout": 60000,
         "metadatamaxage": 300000,
         "allowautotopiccreation": false,
-        "x": 980,
-        "y": 4340,
+        "x": 1000,
+        "y": 4280,
         "wires": []
     },
     {
@@ -3152,5 +3167,95 @@
         "x": 900,
         "y": 2700,
         "wires": []
+    },
+    {
+        "id": "ebfcd2e6b82966e4",
+        "type": "redis-command",
+        "z": "9d4db24319f4b0b7",
+        "server": "fefb39603165678d",
+        "command": "SADD",
+        "name": "mark processed",
+        "topic": "processed_files",
+        "params": "[\"msg.fileOnly\"]",
+        "paramsType": "json",
+        "payloadType": "json",
+        "block": false,
+        "x": 960,
+        "y": 440,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "4f352f8771778f97",
+        "type": "redis-command",
+        "z": "9d4db24319f4b0b7",
+        "server": "fefb39603165678d",
+        "command": "SADD",
+        "name": "mark processed",
+        "topic": "processed_files_spi",
+        "params": "[\"msg.fileOnly\"]",
+        "paramsType": "json",
+        "payloadType": "json",
+        "block": false,
+        "x": 940,
+        "y": 1420,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "e44399fac97dbbaa",
+        "type": "redis-command",
+        "z": "9d4db24319f4b0b7",
+        "server": "fefb39603165678d",
+        "command": "SADD",
+        "name": "mark processed",
+        "topic": "processed_files_aoi2",
+        "params": "[\"msg.fileOnly\"]",
+        "paramsType": "json",
+        "payloadType": "json",
+        "block": false,
+        "x": 960,
+        "y": 2460,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "9c3c5fba01731928",
+        "type": "redis-command",
+        "z": "9d4db24319f4b0b7",
+        "server": "fefb39603165678d",
+        "command": "SADD",
+        "name": "mark processed",
+        "topic": "processed_files_spi2",
+        "params": "[\"msg.fileOnly\"]",
+        "paramsType": "json",
+        "payloadType": "json",
+        "block": false,
+        "x": 960,
+        "y": 3380,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "83841b855be0a724",
+        "type": "redis-command",
+        "z": "9d4db24319f4b0b7",
+        "server": "fefb39603165678d",
+        "command": "SADD",
+        "name": "mark processed",
+        "topic": "processed_files_fcr2",
+        "params": "[\"msg.fileOnly\"]",
+        "paramsType": "json",
+        "payloadType": "json",
+        "block": false,
+        "x": 960,
+        "y": 4340,
+        "wires": [
+            []
+        ]
     }
 ]
