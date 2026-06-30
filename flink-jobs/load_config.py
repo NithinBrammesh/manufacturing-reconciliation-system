@@ -1,17 +1,31 @@
 from pathlib import Path
 from dotenv import dotenv_values
 
-# ==========================
-# Load config.env
-# ==========================
+# =========================================
+# Locate config.env — works in both
+# the JobManager and the Beam worker
+# =========================================
 
-BASE_DIR = Path(__file__).parent
+_this_dir = Path(__file__).parent
+_fallback  = Path("/opt/flink/jobs")
 
-config = dotenv_values(BASE_DIR / "config.env")
+_candidates = [
+    _this_dir / "config.env",
+    _fallback  / "config.env",
+]
 
-# ==========================
+_env_path = next((p for p in _candidates if p.exists()), None)
+
+if _env_path is None:
+    raise FileNotFoundError(
+        f"config.env not found in {_this_dir} or {_fallback}"
+    )
+
+config = dotenv_values(_env_path)
+
+# =========================================
 # Parse Config
-# ==========================
+# =========================================
 
 line_config = {}
 
@@ -19,9 +33,9 @@ for key, value in config.items():
     if value:
         line_config[key] = value.split(",")
 
-# ==========================
+# =========================================
 # Kafka Topics
-# ==========================
+# =========================================
 
 topics = {
     "AOI": line_config.get("AOI_TOPICS", []),
@@ -29,9 +43,9 @@ topics = {
     "FCR": line_config.get("FCR_TOPICS", [])
 }
 
-# ==========================
+# =========================================
 # Manufacturing Lines
-# ==========================
+# =========================================
 
 lines = {}
 
@@ -50,9 +64,9 @@ for key, value in line_config.items():
                 "machine": machine_name
             })
 
-# ==========================
+# =========================================
 # Test
-# ==========================
+# =========================================
 
 if __name__ == "__main__":
 

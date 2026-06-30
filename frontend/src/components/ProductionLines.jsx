@@ -3,9 +3,10 @@ import styles from "./ProductionLines.module.css";
 import {
   HiOutlineBuildingOffice2,
   HiOutlineCheckCircle,
+  HiOutlineXCircle,
 } from "react-icons/hi2";
 
-const ProductionLines = ({ lines, selectedLine, onLineSelect, metrics }) => {
+const ProductionLines = ({ lines, selectedLine, onLineSelect, metrics, status }) => {
 
   const getActiveMachines = (line) => {
     const m = metrics[line];
@@ -22,6 +23,15 @@ const ProductionLines = ({ lines, selectedLine, onLineSelect, metrics }) => {
     };
   };
 
+  const getLineStatus = (line) => {
+    const s = status[line];
+    if (!s) return { label: "Unknown", isActive: false };
+    return {
+      label: s.state === "ACTIVE" ? "Running" : "Idle",
+      isActive: s.state === "ACTIVE",
+    };
+  };
+
   return (
     <section className={styles.container}>
       <div className={styles.sectionHeader}>
@@ -32,6 +42,7 @@ const ProductionLines = ({ lines, selectedLine, onLineSelect, metrics }) => {
       <div className={styles.grid}>
         {lines.map((line) => {
           const { count, label } = getActiveMachines(line);
+          const { label: statusLabel, isActive } = getLineStatus(line);
 
           return (
             <div
@@ -43,9 +54,17 @@ const ProductionLines = ({ lines, selectedLine, onLineSelect, metrics }) => {
                 <div className={styles.iconBox}>
                   <HiOutlineBuildingOffice2 />
                 </div>
-                <div className={styles.status}>
-                  <HiOutlineCheckCircle />
-                  <span>Running</span>
+
+                {/* Real status badge — green = ACTIVE, red = IDLE */}
+                <div
+                  className={styles.status}
+                  style={{ color: isActive ? "#16a34a" : "#dc2626" }}
+                >
+                  {isActive
+                    ? <HiOutlineCheckCircle />
+                    : <HiOutlineXCircle />
+                  }
+                  <span>{statusLabel}</span>
                 </div>
               </div>
 

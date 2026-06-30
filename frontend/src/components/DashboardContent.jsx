@@ -1,14 +1,12 @@
 import React from "react";
 import styles from "./DashboardContent.module.css";
-import {
-  HiOutlineCircleStack,
-  HiOutlineClipboardDocumentCheck,
-  HiOutlineCpuChip,
-  HiOutlineChartBar,
-  HiOutlineArrowTrendingUp,
-} from "react-icons/hi2";
+import ComparisonCard from "./ComparisonCard";
+import SummaryCards from "./SummaryCards";
+import MachineHealth from "./MachineHealth";
+import AlertPanel from "./AlertPanel";
 
 const DashboardContent = ({ metrics }) => {
+
   if (!metrics) {
     return (
       <div className={styles.noData}>
@@ -17,147 +15,67 @@ const DashboardContent = ({ metrics }) => {
     );
   }
 
-  const hasAOI = parseInt(metrics.total_aoi) > 0;
-  const hasSPI = parseInt(metrics.total_spi) > 0;
-  const hasFCR = parseInt(metrics.total_fcr) > 0;
+  const comparisons = metrics.comparisons
+    ? JSON.parse(metrics.comparisons)
+    : [];
 
-  const activeMachineCount = [hasAOI, hasSPI, hasFCR].filter(Boolean).length;
+  const totalKeys = Object.keys(metrics).filter(
+    k => k.startsWith("total_") && parseInt(metrics[k]) > 0
+  );
+  const activeMachineCount = totalKeys.length;
 
   return (
     <div className={styles.container}>
 
-      {/* ========================= */}
-      {/* Production Summary */}
-      {/* ========================= */}
+      {/* ── Alerts ── */}
+      <AlertPanel metrics={metrics} />
 
+      {/* ── Summary ── */}
       <div className={styles.sectionTitle}>
         <h2>Production Summary</h2>
       </div>
+      <SummaryCards metrics={metrics} />
 
-      <div className={styles.summaryGrid}>
-        {hasAOI && (
-          <div className={styles.summaryCard}>
-            <HiOutlineCircleStack />
-            <h4>Total AOI</h4>
-            <h2>{metrics.total_aoi}</h2>
-          </div>
-        )}
-
-        {hasSPI && (
-          <div className={styles.summaryCard}>
-            <HiOutlineClipboardDocumentCheck />
-            <h4>Total SPI</h4>
-            <h2>{metrics.total_spi}</h2>
-          </div>
-        )}
-
-        {hasFCR && (
-          <div className={styles.summaryCard}>
-            <HiOutlineCpuChip />
-            <h4>Total FCR</h4>
-            <h2>{metrics.total_fcr}</h2>
-          </div>
-        )}
-
-        <div className={styles.summaryCard}>
-          <HiOutlineChartBar />
-          <h4>Overall Match</h4>
-          <h2>{metrics.overall_percentage}%</h2>
-        </div>
+      {/* ── Machine Health ── */}
+      <div className={styles.sectionTitle} style={{ marginTop: 40 }}>
+        <h2>Machine Health</h2>
       </div>
+      <MachineHealth metrics={metrics} />
 
-      {/* ========================= */}
-      {/* Active Machines Info */}
-      {/* ========================= */}
-
+      {/* ── Comparison Cards ── */}
       <div className={styles.sectionTitle}>
         <h2>Machine Comparison</h2>
         <p>{activeMachineCount} machine{activeMachineCount !== 1 ? "s" : ""} active on this line</p>
       </div>
 
       <div className={styles.comparisonGrid}>
+        {comparisons.map(pair => {
+          const [SOURCE, TARGET] = pair.split("_");
+          const s = SOURCE.toLowerCase();
+          const t = TARGET.toLowerCase();
 
-        {/* AOI ↔ SPI — only if both have data */}
-        {hasAOI && hasSPI && (
-          <div className={styles.compareCard}>
-            <div className={styles.compareHeader}>
-              <HiOutlineArrowTrendingUp />
-              <h3>AOI ↔ SPI</h3>
-            </div>
-            <div className={styles.compareBody}>
-              <p>Matched <span>{metrics.aoi_spi_matched}</span></p>
-              <p>Match % <span>{metrics.aoi_spi_match_percentage}%</span></p>
-              <p>Loss % <span>{metrics.aoi_spi_loss_percentage}%</span></p>
-              <p>AOI missing in SPI <span>{metrics.aoi_missing_in_spi}</span></p>
-              <p>SPI missing in AOI <span>{metrics.spi_missing_in_aoi}</span></p>
-            </div>
-          </div>
-        )}
+          return (
+            <ComparisonCard
+              key={pair}
+              title={`${SOURCE} ↔ ${TARGET}`}
 
-        {/* AOI ↔ FCR — only if both have data */}
-        {hasAOI && hasFCR && (
-          <div className={styles.compareCard}>
-            <div className={styles.compareHeader}>
-              <HiOutlineArrowTrendingUp />
-              <h3>AOI ↔ FCR</h3>
-            </div>
-            <div className={styles.compareBody}>
-              <p>Matched <span>{metrics.aoi_fcr_matched}</span></p>
-              <p>Match % <span>{metrics.aoi_fcr_match_percentage}%</span></p>
-              <p>Loss % <span>{metrics.aoi_fcr_loss_percentage}%</span></p>
-              <p>AOI missing in FCR <span>{metrics.aoi_missing_in_fcr}</span></p>
-              <p>FCR missing in AOI <span>{metrics.fcr_missing_in_aoi}</span></p>
-            </div>
-          </div>
-        )}
+              forwardLabel={`${SOURCE} → ${TARGET}`}
+              forwardMatched={metrics[`${s}_${t}_matched`]}
+              forwardMatch={metrics[`${s}_${t}_match_percentage`]}
+              forwardLoss={metrics[`${s}_${t}_loss_percentage`]}
+              forwardMissing={metrics[`${s}_missing_in_${t}`]}
+              forwardMissingLabel={`${SOURCE} missing in ${TARGET}`}
 
-        {/* SPI ↔ FCR — only if both have data */}
-        {hasSPI && hasFCR && (
-          <div className={styles.compareCard}>
-            <div className={styles.compareHeader}>
-              <HiOutlineArrowTrendingUp />
-              <h3>SPI ↔ FCR</h3>
-            </div>
-            <div className={styles.compareBody}>
-              <p>Matched <span>{metrics.spi_fcr_matched}</span></p>
-              <p>Match % <span>{metrics.spi_fcr_match_percentage}%</span></p>
-              <p>Loss % <span>{metrics.spi_fcr_loss_percentage}%</span></p>
-              <p>SPI missing in FCR <span>{metrics.spi_missing_in_fcr}</span></p>
-              <p>FCR missing in SPI <span>{metrics.fcr_missing_in_spi}</span></p>
-            </div>
-          </div>
-        )}
-
+              reverseLabel={`${TARGET} → ${SOURCE}`}
+              reverseMatched={metrics[`${s}_${t}_matched`]}
+              reverseMatch={metrics[`${t}_${s}_match_percentage`]}
+              reverseLoss={metrics[`${t}_${s}_loss_percentage`]}
+              reverseMissing={metrics[`${t}_missing_in_${s}`]}
+              reverseMissingLabel={`${TARGET} missing in ${SOURCE}`}
+            />
+          );
+        })}
       </div>
-
-      {/* ========================= */}
-      {/* Three-Way — only if all three have data */}
-      {/* ========================= */}
-
-      {hasAOI && hasSPI && hasFCR && (
-        <>
-          {/* <div className={styles.sectionTitle}>
-            <h2>Three-Way Reconciliation</h2>
-          </div>
-          <div className={styles.summaryGrid}>
-            <div className={styles.summaryCard}>
-              <HiOutlineChartBar />
-              <h4>All Three Matched</h4>
-              <h2>{metrics.all_matched}</h2>
-            </div>
-            <div className={styles.summaryCard}>
-              <HiOutlineChartBar />
-              <h4>Overall Total</h4>
-              <h2>{metrics.overall_total}</h2>
-            </div>
-            <div className={styles.summaryCard}>
-              <HiOutlineChartBar />
-              <h4>Overall Match %</h4>
-              <h2>{metrics.overall_percentage}%</h2>
-            </div>
-          </div> */}
-        </>
-      )}
 
     </div>
   );

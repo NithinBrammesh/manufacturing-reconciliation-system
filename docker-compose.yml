@@ -146,3 +146,29 @@ services:
     volumes:
       - ./nodered-data:/data
       - ./real-data:/real-data
+    
+  flink-watchdog:
+    build:
+      context: .
+      dockerfile: Dockerfile.flink
+    container_name: flink-watchdog
+    depends_on:
+      - redis
+    entrypoint: ["python", "-u"]
+    command: ["/opt/flink/jobs/watchdog.py"]
+    volumes:
+      - ./flink-jobs:/opt/flink/jobs
+    restart: unless-stopped
+
+  flink-aggregation:
+    build:
+      context: .
+      dockerfile: Dockerfile.flink
+    container_name: flink-aggregation
+    depends_on:
+      - redis
+    entrypoint: ["python", "-u"]
+    command: ["/opt/flink/jobs/aggregation_service.py"]
+    volumes:
+      - ./flink-jobs:/opt/flink/jobs
+    restart: unless-stopped
