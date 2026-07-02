@@ -7,15 +7,16 @@ POLL_INTERVAL = 5
 
 print("Watchdog started. Monitoring for idle lines...")
 
+# Single long-lived connection instead of reconnecting every 5s
+r = redis.Redis(
+    host="redis",
+    port=6379,
+    decode_responses=True
+)
+
 while True:
 
     try:
-
-        r = redis.Redis(
-            host="redis",
-            port=6379,
-            decode_responses=True
-        )
 
         now = int(time.time())
 
@@ -37,36 +38,61 @@ while True:
 
             if idle_for >= IDLE_TIMEOUT:
 
-                print(f"[{line}] IDLE — no activity for {idle_for}s. Publishing LINE_IDLE.")
+                # Only fire IDLE transition once, not every poll
+                if state != "IDLE":
 
-                # Publish LINE_IDLE event
-                r.publish("line_events", json.dumps({
-                    "event":     "LINE_IDLE",
-                    "line":      line,
-                    "timestamp": now
-                }))
+                    print(f"[{line}] IDLE — no activity for {idle_for}s. Publishing LINE_IDLE.")
 
-                # Update state to IDLE (don't delete — dashboard needs to read it)
-                r.hset(key, mapping={
-                    "state":         "IDLE",
-                    "last_activity": last_activity
-                })
+                    r.publish("line_events", json.dumps({
+                        "event":     "LINE_IDLE",
+                        "line":      line,
+                        "timestamp": now
+                    }))
 
-                # Also write to status key for Flask API
-                r.hset(f"status:{line}", mapping={
-                    "state": "IDLE",
-                    "since": now
-                })
+                    r.hset(key, mapping={
+                        "state": "IDLE",
+                    })
+
+                    r.hset(f"status:{line}", mapping={
+                        "state": "IDLE",
+                        "since": now
+                    })
 
             else:
 
-                # Line is active — keep status key updated
-                r.hset(f"status:{line}", mapping={
-                    "state": "ACTIVE",
-                    "since": data.get("started_at", now)
-                })
+                if state == "IDLE":
 
-        r.close()
+                    # Line just came back to life — pyflink's is_processing()
+                    # still sees this hash as existing, so it never calls
+                    # start_processing()/publish_line_active() again on its own.
+                    # Watchdog treats "fresh activity + stale IDLE state" as
+                    # a reactivation and restarts the session itself.
+
+                    print(f"[{line}] REACTIVATED — no longer idle. Publishing LINE_ACTIVE.")
+
+                    r.hset(key, mapping={
+                        "state":      "ACTIVE",
+                        "started_at": now,
+                    })
+
+                    r.publish("line_events", json.dumps({
+                        "event":     "LINE_ACTIVE",
+                        "line":      line,
+                        "timestamp": now
+                    }))
+
+                    r.hset(f"status:{line}", mapping={
+                        "state": "ACTIVE",
+                        "since": now
+                    })
+
+                else:
+
+                    # Already active — keep status key in sync
+                    r.hset(f"status:{line}", mapping={
+                        "state": "ACTIVE",
+                        "since": data.get("started_at", now)
+                    })
 
     except Exception as e:
         print(f"Watchdog error: {e}")

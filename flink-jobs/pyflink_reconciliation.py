@@ -1,4 +1,5 @@
 import json
+import time
 import redis
 
 from update_metrics import update_metrics
@@ -10,6 +11,7 @@ from redis_events import (
 )
 
 from load_config import topics, lines
+from window_manager import get_current_window
 
 print("Topics:", topics)
 print("Lines:", lines)
@@ -33,21 +35,34 @@ env.set_parallelism(1)
 env.add_python_file("/opt/flink/jobs/update_metrics.py")
 env.add_python_file("/opt/flink/jobs/load_config.py")
 env.add_python_file("/opt/flink/jobs/redis_events.py")
-env.add_python_file("/opt/flink/jobs/config.env")  
+env.add_python_file("/opt/flink/jobs/window_manager.py")
+env.add_python_file("/opt/flink/jobs/config.env")
 
 # =====================================================
 # SAVE BARCODE
 # =====================================================
 
-def save_barcode(pipe, data):
+def save_barcode(pipe, data, window_id):
+    """
+    Stores the barcode in a ZSET scoped to the given production
+    window. window_id is passed in from process_record() — this
+    function never looks up the window itself.
+    """
 
-    line = data["line"]
+    line    = data["line"]
     machine = data["machine"]
     barcode = data["barcode"]
 
-    pipe.sadd(
-        f"line:{line}:{machine}",
-        barcode
+    # Millisecond arrival timestamp. If the upstream producer (Node-RED/
+    # Kafka message) already stamps an event-time in ms, prefer that so
+    # this reflects when the machine actually scanned it, not when Flink
+    # received it. Falls back to processing-time if not present.
+    ts_ms = data.get("timestamp_ms") or int(time.time() * 1000)
+
+    # ZSET: member = barcode (still unique), score = ms timestamp.
+    pipe.zadd(
+        f"line:{line}:{machine}:{window_id}",
+        {barcode: ts_ms}
     )
 
 
@@ -74,10 +89,18 @@ def process_record(record):
 
         line = data["line"]
 
+        # Resolve the current window ONCE per record, and reuse it for
+        # both barcode storage and metric calculation. Calling
+        # get_current_window() twice in the same record risks the rare
+        # edge case where the window flips between the two calls,
+        # causing the barcode to be stored in one window and the
+        # metrics to be calculated for a different one.
+        window_id = get_current_window(r, line)
+
         pipe = r.pipeline()
 
         # Store barcode
-        save_barcode(pipe, data)
+        save_barcode(pipe, data, window_id)
 
         # Processing state
         if not is_processing(r, line):
@@ -96,16 +119,17 @@ def process_record(record):
         pipe.execute()
 
         print("========== BEFORE update_metrics ==========")
-        print(f"Processing Line: {line}")
+        print(f"Processing Line: {line}, Window: {window_id}")
 
-        update_metrics(r, line)
+        update_metrics(r, line, window_id)
 
         print("========== AFTER update_metrics ==========")
 
         print(
             f"[{line}] "
             f"{data['machine']} "
-            f"Barcode : {barcode}"
+            f"Barcode : {barcode} "
+            f"Window : {window_id}"
         )
 
         return record
@@ -136,14 +160,13 @@ def process_record(record):
 def process_aoi(record):
     return process_record(record)
 
-    
+
 def process_spi(record):
     return process_record(record)
 
 
 def process_fcr(record):
     return process_record(record)
-
 
 
 # =====================================================
@@ -211,18 +234,22 @@ if __name__ == "__main__":
         decode_responses=True
     )
 
-    for key in startup_redis.scan_iter("metrics:*"):
-        startup_redis.delete(key)
-
-    for key in startup_redis.scan_iter("line:*"):
-        startup_redis.delete(key)
-
+    # IMPORTANT: we do NOT wipe line:*, metrics:*, or window:* on
+    # startup. Those now hold window-scoped history
+    # (line:LINE1:AOI1:7, metrics:LINE1:7, window:LINE1, ...) that must
+    # survive a Flink restart — otherwise restarting the job would
+    # silently reset every line's active 24h window and lose history.
+    # Only transient "is a line currently running" state gets cleared,
+    # since that's meaningless to carry across a restart anyway.
     for key in startup_redis.scan_iter("processing:*"):
+        startup_redis.delete(key)
+
+    for key in startup_redis.scan_iter("status:*"):
         startup_redis.delete(key)
 
     startup_redis.close()
 
-    print("Redis reconciliation data cleared")
+    print("Processing/status state cleared (barcode + window history preserved)")
 
     print("Flink Reconciliation Started")
 

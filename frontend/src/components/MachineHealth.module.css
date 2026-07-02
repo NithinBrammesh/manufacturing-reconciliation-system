@@ -2,16 +2,30 @@
   margin-top: 0;
 }
 
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
 .title {
   font-size: 20px;
   color: #1e293b;
-  margin-bottom: 16px;
   font-weight: 700;
+}
+
+.uniqueTotal {
+  font-size: 13px;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 4px 12px;
+  border-radius: 20px;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 16px;
 }
 
@@ -53,9 +67,93 @@
   color: #1e293b;
 }
 
-.total {
+.statRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-size: 13px;
   color: #64748b;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(0,0,0,.06);
+}
+
+.statRow strong {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* Exclusive box */
+.exclusiveBox {
+  background: rgba(255,255,255,0.6);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px dashed rgba(124,58,237,0.3);
+}
+
+.exclusiveTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.exclusiveLabel {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  color: #7c3aed;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.exclusiveCount {
+  display: block;
+  font-size: 24px;
+  font-weight: 800;
+  color: #7c3aed;
+}
+
+.exclusivePreview {
+  font-size: 11px;
+  color: #6b7280;
+  font-family: "Courier New", monospace;
+}
+
+.viewBtn {
+  background: #7c3aed;
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .2s;
+  white-space: nowrap;
+}
+
+.viewBtn:hover {
+  background: #6d28d9;
+  transform: scale(1.04);
+}
+
+.missingBtn {
+  background: transparent;
+  border: 1px dashed;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .2s;
+  text-align: left;
+}
+
+.missingBtn:hover {
+  background: rgba(255,255,255,0.5);
 }
 
 .barTrack {
@@ -72,7 +170,130 @@
   transition: width .6s ease;
 }
 
-.matchPct {
-  font-size: 13px;
+.pctRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
   font-weight: 600;
+}
+
+.outOf {
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  opacity: 0.8;
+}
+
+/* ── Modal ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+}
+
+.modal {
+  background: white;
+  border-radius: 20px;
+  padding: 28px;
+  width: 90%;
+  max-width: 640px;
+  max-height: 80vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 25px 60px rgba(0,0,0,.2);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.modalTitle {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.modalTitle svg {
+  font-size: 32px;
+  color: #7c3aed;
+  flex-shrink: 0;
+}
+
+.modalTitle h3 {
+  font-size: 20px;
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.modalTitle p {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.closeBtn {
+  background: #f1f5f9;
+  border: none;
+  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  color: #64748b;
+  transition: .2s;
+  flex-shrink: 0;
+}
+
+.closeBtn:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.modalCount {
+  display: flex;
+}
+
+.countBadge {
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.barcodeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.barcodeChip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-family: "Courier New", monospace;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.barcodeChip svg {
+  font-size: 16px;
+  color: #7c3aed;
+  flex-shrink: 0;
 }

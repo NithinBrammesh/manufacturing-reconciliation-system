@@ -87,34 +87,22 @@ def get_status():
     return jsonify(response)
 
 
-
 @app.route("/events")
 def sse_events():
-    """
-    SSE endpoint — streams metrics + status to the browser.
-    Browser connects once and receives updates automatically.
-    """
     def stream():
-        pubsub = r.pubsub()
-        pubsub.subscribe("line_events")
-
         try:
-            # Send current snapshot immediately on connect
-            snapshot = build_snapshot()
-            yield f"data: {json.dumps(snapshot)}\n\n"
+            # Send snapshot immediately on connect
+            yield f"data: {json.dumps(build_snapshot())}\n\n"
 
-            # Then stream updates as Redis Pub/Sub events arrive
-            for message in pubsub.listen():
-
-                if message["type"] != "message":
-                    continue
-
-                # On any event, send fresh snapshot to all connected clients
-                snapshot = build_snapshot()
-                yield f"data: {json.dumps(snapshot)}\n\n"
+            # Force-refresh every 2s so the dashboard updates live even
+            # between pub/sub events (e.g. while barcodes are flowing but
+            # no LINE_ACTIVE/LINE_IDLE event has fired)
+            while True:
+                time.sleep(2)
+                yield f"data: {json.dumps(build_snapshot())}\n\n"
 
         except GeneratorExit:
-            pubsub.unsubscribe()
+            pass
 
     return Response(
         stream_with_context(stream()),
@@ -122,7 +110,9 @@ def sse_events():
         headers={
             "Cache-Control": "no-cache",
             "X-Accel-Buffering": "no",
-            "Access-Control-Allow-Origin": "*",
+            # No manual Access-Control-Allow-Origin here — CORS(app) above
+            # already adds it globally; setting it twice can make browsers
+            # reject the response.
         }
     )
 
@@ -149,4 +139,7 @@ def build_snapshot():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    # threaded=True is required: /events holds each connection open
+    # indefinitely, so without it a single SSE client blocks every
+    # other request (including a second dashboard tab) on the dev server.
+    app.run(host="0.0.0.0", port=5000, debug=True, threaded=True)
