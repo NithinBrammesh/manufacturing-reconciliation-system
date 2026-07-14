@@ -133,36 +133,27 @@ def get_window_info(r: redis.Redis, line: str):
 # Delete Previous Window
 # ==========================================================
 
-def delete_window_data(
-    r: redis.Redis,
-    line: str,
-    window_id: int
-):
-    """
-    Deletes all Redis data belonging to one completed
-    production window.
-    """
+def delete_window_data(r: redis.Redis, line: str, window_id: int):
 
     print(f"[{line}] Clearing completed Window #{window_id}")
 
     pipe = r.pipeline()
-
     line_config = lines.get(line)
 
     if line_config:
-
         for machine in line_config:
-
             machine_name = machine["machine"]
+            machine_type = machine["type"]
 
-            pipe.delete(
-                f"line:{line}:{machine_name}:{window_id}"
-            )
+            # Delete main barcode key
+            pipe.delete(f"line:{line}:{machine_name}:{window_id}")
 
-    pipe.delete(
-        f"metrics:{line}:{window_id}"
-    )
+            # Delete GOOD/BAD subkeys if SPI
+            if machine_type == "SPI":
+                pipe.delete(f"line:{line}:{machine_name}:GOOD:{window_id}")
+                pipe.delete(f"line:{line}:{machine_name}:BAD:{window_id}")
 
+    pipe.delete(f"metrics:{line}:{window_id}")
     pipe.execute()
 
     print(f"[{line}] Window #{window_id} deleted")

@@ -3,7 +3,7 @@ import Header from "../components/Header";
 import ProductionLines from "../components/ProductionLines";
 import DashboardContent from "../components/DashboardContent";
 
-const API = "http://localhost:5000";
+const API = "";
 
 const Dashboard = () => {
   const [lines, setLines]             = useState([]);

@@ -64,7 +64,7 @@
         "type": "function",
         "z": "9d4db24319f4b0b7",
         "name": "function 1",
-        "func": "// Save file information before changing msg.payload\nvar savedFileOnly = msg.fileOnly;\nvar savedFilename = msg.filename;\n\n// Parse CSV\nvar lines = msg.payload.split('\\n');\nvar data = {};\n\nlines.forEach(function (line) {\n    line = line.trim();\n\n    if (line) {\n        var idx = line.indexOf(',');\n\n        if (idx !== -1) {\n            var key = line.substring(0, idx).trim();\n            var value = line.substring(idx + 1).trim().replace(/\"/g, '');\n\n            data[key] = value;\n        }\n    }\n});\n\n// ---------- Output 1 : Kafka ----------\nvar kafkaMsg = {\n    payload: JSON.stringify({\n        barcode: data[\"Barcode\"],\n        result: data[\"Result\"],\n        panelId: data[\"Panel ID\"],\n        programName: data[\"Program Name\"],\n\n        machine: \"AOI3D1\",\n        line: \"LINE1\",\n        sourceType: \"AOI\",\n\n        timestamp: data[\"Test End Time\"]\n    })\n};\n\n// ---------- Output 2 : Redis Mark Processed ----------\nvar redisMsg = {\n    payload: savedFileOnly,\n    fileOnly: savedFileOnly,\n    filename: savedFilename\n};\n\nreturn [kafkaMsg, redisMsg];",
+        "func": "// Save filename before changing payload\nvar savedFileOnly = msg.fileOnly;\n\n// Parse CSV\nvar lines = msg.payload.split('\\n');\nvar data = {};\n\nlines.forEach(function (line) {\n\n    line = line.trim();\n\n    if (line) {\n\n        var idx = line.indexOf(',');\n\n        if (idx !== -1) {\n\n            var key = line.substring(0, idx).trim();\n            var value = line.substring(idx + 1).trim().replace(/\"/g, '');\n\n            data[key] = value;\n        }\n    }\n});\n\n// Kafka Message\nvar kafkaMsg = {\n    payload: JSON.stringify({\n        barcode: data[\"Barcode\"],\n        result: data[\"Result\"],\n        panelId: data[\"Panel ID\"],\n        programName: data[\"Program Name\"],\n        machine: \"AOI3D1\",\n        line: \"LINE1\",\n        sourceType: \"AOI\",\n        timestamp: data[\"Test End Time\"]\n    })\n};\n\n// Redis Message\nvar redisMsg = {\n    payload: savedFileOnly\n};\n\nreturn [kafkaMsg, redisMsg];",
         "outputs": 2,
         "timeout": 0,
         "noerr": 0,
@@ -245,7 +245,7 @@
         "paramsType": "json",
         "payloadType": "json",
         "block": false,
-        "x": 490,
+        "x": 510,
         "y": 180,
         "wires": [
             [

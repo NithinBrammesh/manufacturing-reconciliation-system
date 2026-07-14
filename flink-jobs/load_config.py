@@ -23,6 +23,8 @@ if _env_path is None:
 
 config = dotenv_values(_env_path)
 
+print(type(config))
+
 # =========================================
 # Parse Config
 # =========================================
@@ -34,7 +36,7 @@ for key, value in config.items():
         line_config[key] = value.split(",")
 
 # =========================================
-# Kafka Topics
+# Kafka Topics Dictonaries
 # =========================================
 
 topics = {
@@ -53,7 +55,7 @@ for key, value in line_config.items():
 
     if key.startswith("LINE"):
 
-        lines[key] = []
+        lines[key] = []             # Empty list for productionline
 
         for machine in value:
 

@@ -160,6 +160,17 @@ services:
       - ./flink-jobs:/opt/flink/jobs
     restart: unless-stopped
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - flask-api
+    restart: unless-stopped
+
   flink-aggregation:
     build:
       context: .

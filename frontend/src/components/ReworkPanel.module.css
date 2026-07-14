@@ -1,0 +1,237 @@
+.panel {
+  background: white;
+  border-radius: 18px;
+  padding: 28px;
+  box-shadow: 0 10px 25px rgba(0,0,0,.05);
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* ── Split section ── */
+.splitSection { display: flex; flex-direction: column; gap: 14px; }
+
+.splitHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.splitHeader svg { font-size: 22px; color: #2563eb; }
+.splitHeader h4  { font-size: 18px; font-weight: 700; color: #1e293b; flex: 1; }
+
+.totalBadge {
+  font-size: 12px;
+  background: #f1f5f9;
+  color: #64748b;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.splitBar {
+  display: flex;
+  height: 14px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.goodBar { background: #22c55e; transition: width .5s ease; }
+.badBar  { background: #ef4444; transition: width .5s ease; }
+
+.splitLabels {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.splitLabelLeft, .splitLabelRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #475569;
+}
+.goodDot { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; flex-shrink: 0; }
+.badDot  { width: 10px; height: 10px; border-radius: 50%; background: #ef4444; flex-shrink: 0; }
+
+.viewBtnGood {
+  background: #dcfce7;
+  color: #166534;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .2s;
+}
+.viewBtnGood:hover { background: #bbf7d0; }
+
+.viewBtnBad {
+  background: #fee2e2;
+  color: #dc2626;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .2s;
+}
+.viewBtnBad:hover { background: #fecaca; }
+
+/* ── Rework section ── */
+.reworkSection {
+  border-top: 1px dashed #e2e8f0;
+  padding-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.reworkHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.reworkHeader svg { font-size: 22px; }
+.reworkHeader h4  { font-size: 18px; font-weight: 700; color: #1e293b; }
+.reworkSubtitle   { font-size: 13px; color: #64748b; }
+
+.reworkStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+.stat {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.stat span   { font-size: 12px; color: #64748b; }
+.stat strong { font-size: 20px; font-weight: 800; color: #0f172a; }
+
+.barTrack {
+  width: 100%;
+  height: 10px;
+  background: #f1f5f9;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.barFill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width .6s ease;
+}
+
+.viewMissingBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .2s;
+  width: fit-content;
+}
+.viewMissingBtn:hover { background: #fee2e2; }
+.viewMissingBtn svg   { font-size: 18px; }
+
+.allReceived {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f0fdf4;
+  color: #166534;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid #86efac;
+}
+.allReceived svg { font-size: 20px; }
+
+/* ── Modal ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+}
+.modal {
+  background: white;
+  border-radius: 20px;
+  padding: 28px;
+  width: 90%;
+  max-width: 640px;
+  max-height: 80vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 25px 60px rgba(0,0,0,.2);
+}
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.modalTitle {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.modalTitle svg { font-size: 32px; color: #2563eb; flex-shrink: 0; }
+.modalTitle h3  { font-size: 18px; font-weight: 700; color: #1e293b; }
+.modalTitle p   { font-size: 13px; color: #64748b; margin-top: 4px; }
+.closeBtn {
+  background: #f1f5f9;
+  border: none;
+  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  color: #64748b;
+}
+.closeBtn:hover { background: #e2e8f0; }
+.countBadge {
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  width: fit-content;
+}
+.barcodeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+.barcodeChip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-family: "Courier New", monospace;
+  color: #1e293b;
+  font-weight: 600;
+}
+.barcodeChip svg { font-size: 16px; color: #2563eb; flex-shrink: 0; }
+.emptyMsg { color: #64748b; font-size: 14px; padding: 20px 0; text-align: center; }

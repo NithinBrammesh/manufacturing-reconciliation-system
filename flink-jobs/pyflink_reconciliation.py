@@ -43,28 +43,49 @@ env.add_python_file("/opt/flink/jobs/config.env")
 # =====================================================
 
 def save_barcode(pipe, data, window_id):
-    """
-    Stores the barcode in a ZSET scoped to the given production
-    window. window_id is passed in from process_record() — this
-    function never looks up the window itself.
-    """
 
-    line    = data["line"]
-    machine = data["machine"]
-    barcode = data["barcode"]
+    line        = data["line"]
+    machine     = data["machine"]
+    barcode     = data["barcode"]
+    result      = data.get("result", "").upper()      # GOOD or BAD from PCBResult
+    ts_ms       = data.get("timestamp_ms") or int(time.time() * 1000)
+    source_type = data.get("sourceType", "").upper()  # SPI, FCR, AOI — from Node-RED
 
-    # Millisecond arrival timestamp. If the upstream producer (Node-RED/
-    # Kafka message) already stamps an event-time in ms, prefer that so
-    # this reflects when the machine actually scanned it, not when Flink
-    # received it. Falls back to processing-time if not present.
-    ts_ms = data.get("timestamp_ms") or int(time.time() * 1000)
+    if source_type == "SPI":
 
-    # ZSET: member = barcode (still unique), score = ms timestamp.
-    pipe.zadd(
-        f"line:{line}:{machine}:{window_id}",
-        {barcode: ts_ms}
-    )
+        # All SPI barcodes
+        pipe.zadd(
+            f"line:{line}:{machine}:{window_id}",
+            {barcode: ts_ms}
+        )
 
+        # Split into GOOD and BAD
+        if result == "GOOD":
+            pipe.zadd(
+                f"line:{line}:{machine}:GOOD:{window_id}",
+                {barcode: ts_ms}
+            )
+        elif result == "BAD":
+            pipe.zadd(
+                f"line:{line}:{machine}:BAD:{window_id}",
+                {barcode: ts_ms}
+            )
+
+    elif source_type == "FCR":
+
+        # FCR just stores what it received — no split needed
+        pipe.zadd(
+            f"line:{line}:{machine}:{window_id}",
+            {barcode: ts_ms}
+        )
+
+    else:
+
+        # AOI or anything else
+        pipe.zadd(
+            f"line:{line}:{machine}:{window_id}",
+            {barcode: ts_ms}
+        )
 
 # =====================================================
 # UNIFIED PROCESSOR
@@ -89,12 +110,6 @@ def process_record(record):
 
         line = data["line"]
 
-        # Resolve the current window ONCE per record, and reuse it for
-        # both barcode storage and metric calculation. Calling
-        # get_current_window() twice in the same record risks the rare
-        # edge case where the window flips between the two calls,
-        # causing the barcode to be stored in one window and the
-        # metrics to be calculated for a different one.
         window_id = get_current_window(r, line)
 
         pipe = r.pipeline()

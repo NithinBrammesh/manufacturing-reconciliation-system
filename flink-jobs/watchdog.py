@@ -3,7 +3,7 @@ import time
 import redis
 
 IDLE_TIMEOUT = 30
-POLL_INTERVAL = 5
+POLL_INTERVAL = 2
 
 print("Watchdog started. Monitoring for idle lines...")
 

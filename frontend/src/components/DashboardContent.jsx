@@ -4,6 +4,7 @@ import ComparisonCard from "./ComparisonCard";
 import SummaryCards from "./SummaryCards";
 import MachineHealth from "./MachineHealth";
 import AlertPanel from "./AlertPanel";
+import ReworkPanel from "./ReworkPanel"; 
 
 const DashboardContent = ({ metrics }) => {
 
@@ -41,6 +42,12 @@ const DashboardContent = ({ metrics }) => {
         <h2>Machine Health</h2>
       </div>
       <MachineHealth metrics={metrics} />
+
+
+      <div className={styles.sectionTitle} style={{ marginTop: 40 }}>
+       <h2>SPI Result & FCR Rework</h2>
+      </div>
+      <ReworkPanel metrics={metrics} />
 
       {/* ── Comparison Cards ── */}
       <div className={styles.sectionTitle}>
